@@ -6,9 +6,11 @@
 void insertion_sort(std::vector<std::int32_t>& values, bool decreasing) {
   for (auto i=1; i < values.size(); i++) {
     int32_t key {values[i]};
-    auto j = i - 1;
-    bool condition { (!decreasing && values[j] > key) || (decreasing && values[j] < key)};
-    while (j >= 0 && condition) {
+    auto j { i - 1 };
+    auto condition = [decreasing, values, key] (int index) { 
+      return (!decreasing && values[index] > key) || (decreasing && values[index] < key); 
+    };
+    while (j >= 0 && condition(j)) {
       values[j + 1] = values[j];
       j--;
     }
@@ -35,6 +37,8 @@ void print_test_outputs(std::vector<int32_t>& values) {
 
 int main() {
   std::vector<std::int32_t> test1 {2, 10, 5, 7};
+  std::vector<std::int32_t> test2 {3, 1, 4, 5, 2};
   print_test_outputs(test1);
+  print_test_outputs(test2);
 }
 
