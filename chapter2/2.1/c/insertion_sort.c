@@ -8,7 +8,7 @@ void print_array(const int array[], const int length) {
 }
 
 int main() {
-
+  // TODO - it would be nice to come back and make this take command line arguments instead of a hardcoded array
   int unsortedArray[] = {2, 1, 4, 5, 3};
   int numberOfElements = sizeof(unsortedArray) / sizeof(unsortedArray[0]);
 
