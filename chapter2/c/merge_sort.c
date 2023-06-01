@@ -1,82 +1,81 @@
 #include <stdio.h>
 
-/*
- *  A: the list we wish to sort
- *  p: the lower bound of the range we are merging
- *  q: the mid-point of the range we are merging, rounded down
- *  r: the upper bound of the range we are merging
- *
- *  merge two sub-ranges of A such that A[p, r] is sorted in ascending order
- */
-void merge(int A[], int p, int q, int r) {
-  int lengthLeft = q - p + 1;
-  int lengthRight = r - q;
-
-  int leftArray[lengthLeft];
-  for (int i = 0; i < lengthLeft; i++) {
-    leftArray[i] = A[i];
-  }
-  int rightArray[lengthRight];
-  for (int i = 0; i < lengthRight; i++) {
-    rightArray[i] = A[q + i + 1];
-  }
-
-  int leftSmallestRemainingIndex = 0;
-  int rightSmallestRemainingIndex = 0;
-  int fillIndex = 0;
-
-  // as long as each array contains an unmerged element, copy the smallest
-  // unmerged element into A
-  while (leftSmallestRemainingIndex < lengthLeft &&
-         rightSmallestRemainingIndex < lengthRight) {
-    if (leftArray[leftSmallestRemainingIndex] <=
-        rightArray[rightSmallestRemainingIndex]) {
-      A[fillIndex] = leftArray[leftSmallestRemainingIndex];
-      leftSmallestRemainingIndex++;
-    } else {
-      A[fillIndex] = rightArray[rightSmallestRemainingIndex];
-      rightSmallestRemainingIndex++;
-    }
-    fillIndex++;
-  }
-
-  // copy the remainder on to the end of A
-  while (leftSmallestRemainingIndex < lengthLeft) {
-    A[fillIndex] = leftArray[leftSmallestRemainingIndex];
-    leftSmallestRemainingIndex++;
-    fillIndex++;
-  }
-  while (rightSmallestRemainingIndex < lengthRight) {
-    A[fillIndex] = rightArray[rightSmallestRemainingIndex];
-    rightSmallestRemainingIndex++;
-    fillIndex++;
-  }
-}
-
-void mergeSort(int A[], int p, int r) {
-  if (p >= r)
-    return;            // zero or one element
-  int q = (p + r / 2); // floored automatically because integer division
-  mergeSort(A, p, q + 1);
-  mergeSort(A, q + 1, r);
-  merge(A, p, q, r);
-}
-
-void printArray(int array[], int arrayLength) {
-  for (int i = 0; i < arrayLength; i++) {
+void printArray(int *array, int arrayLength) {
+  for (int i = 0; i < arrayLength; ++i) {
     printf("%d ", array[i]);
   }
   printf("%c", '\n');
 }
 
+// A: complete array we are sorting - each step is sorting some sub-array A[p,
+// r) p: inclusive lower bound index for left sub-array q: exclusive upper bound
+// index for left sub-array / inclusive lower bound index for right sub-array r:
+// exclusive upper bound index for right sub-array
+void merge(int *A, int p, int q, int r) {
+  int nL = q - p;
+  int nR = r - q;
+
+  int L[nL];
+  for (int i = 0; i < nL; ++i) {
+    L[i] = A[p + i];
+  }
+  int R[nR];
+  for (int i = 0; i < nR; ++i) {
+    R[i] = A[q + i];
+  }
+
+  int i = 0; // index of smallest remaining element in L
+  int j = 0; // index of smallest remaining element in R
+  int k = p; // index if location in A to fill
+
+  // while L and R contain unmerged elements, copy the smallest unmerged element
+  // into A
+  while (i < nL && j < nR) {
+    if (L[i] <= R[j]) {
+      A[k] = L[i];
+      i++;
+    } else {
+      A[k] = R[j];
+      j++;
+    }
+    k++;
+  }
+
+  // L or R is empty, copy remainder of the other into A
+  while (i < nL) {
+    A[k] = L[i];
+    i++;
+    k++;
+  }
+  while (j < nR) {
+    A[k] = R[j];
+    j++;
+    k++;
+  }
+}
+
+void mergeSort(int *A, int p, int r) {
+  // r - p == 1 when there is a single element in the sub-array -> base case as single-element sub-array is already sorted
+  if (r - p <= 1) {
+    return;
+  }
+  int q = (p + r) / 2; // automatically floored because integer division
+  mergeSort(A, p, q); // merge sort left sub array
+  mergeSort(A, q, r); // merge sort right sub array
+  merge(A, p, q, r); // merge sorted sub arrays
+}
+
 int main() {
-  int array[] = {2, 4, 1, 3, 6, 7, 5};
-  int numberOfElements = sizeof(array) / sizeof(array[0]);
-  printf("unsortedArray:\n\t");
-  printArray(array, numberOfElements);
+  int array[] = {6, 4, 3, 2, 8, 7, 3, 2, 1};
+  int arrayLength = sizeof(array) / sizeof(array[0]);
 
-  mergeSort(array, 0, numberOfElements);
+  printf("Unsorted array:\n\t");
+  printArray(array, arrayLength);
 
-  printf("sortedArray\n\t");
-  printArray(array, numberOfElements);
+  mergeSort(array, 0, arrayLength);
+
+  printf("Sorted array:\n\t");
+  printArray(array, arrayLength);
+
+  return 0;
 }
