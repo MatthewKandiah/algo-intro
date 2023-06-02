@@ -52,7 +52,7 @@ struct Heap buildMaxHeap(int *array, int numberOfElements) {
   return result;
 }
 
-void heapSort(int* array, int arrayLength) {
+void heapSort(int *array, int arrayLength) {
   struct Heap heap = buildMaxHeap(array, arrayLength);
   for (int i = arrayLength - 1; i >= 1; i--) {
     int Ai = heap.array[i];
@@ -62,7 +62,7 @@ void heapSort(int* array, int arrayLength) {
     maxHeapify(heap, 0);
   }
 
-  for(int i = 0; i < arrayLength; i++) {
+  for (int i = 0; i < arrayLength; i++) {
     array[i] = heap.array[i];
   }
 }
