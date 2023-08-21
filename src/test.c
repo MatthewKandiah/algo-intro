@@ -60,6 +60,12 @@ void report_test_results(int32_t **sorted_test_arrays, char *message) {
   }
 }
 
+void test_sort_function(int32_t **test_arrays, sort_function sort_function, char* message) {
+  randomise_test_arrays(test_arrays);
+  apply_sort_function(test_arrays, sort_function);
+  report_test_results(test_arrays, message);
+}
+
 int main() {
   time_t t;
   srand(time(&t));
@@ -74,9 +80,7 @@ int main() {
   test_arrays[2] = array2;
   test_arrays[3] = array3;
 
-  randomise_test_arrays(test_arrays);
-  apply_sort_function(test_arrays, insertion_sort);
-  report_test_results(test_arrays, "Insertion Sort:\n");
+  test_sort_function(test_arrays, insertion_sort, "Insertion Sort:");
 
   return 0;
 }
