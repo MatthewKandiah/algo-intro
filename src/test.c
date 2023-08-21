@@ -1,5 +1,6 @@
 #include "../include/insertion_sort.h"
 #include "../include/merge_sort.h"
+#include "../include/hybrid_merge_insertion_sort.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -97,6 +98,7 @@ int main() {
 
   test_sort_function(test_arrays, insertion_sort, "Insertion Sort:");
   test_sort_function(test_arrays, merge_sort, "Merge Sort:");
+  test_sort_function(test_arrays, hybrid_merge_insertion_sort, "Hybrid Merge-Insertion Sort:");
 
   return 0;
 }
