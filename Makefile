@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g
+CFLAGS = -Wall -g
 
 all: insertion_sort merge_sort hybrid_merge_insertion_sort test
 
