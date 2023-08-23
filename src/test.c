@@ -2,6 +2,7 @@
 #include "../include/merge_sort.h"
 #include "../include/hybrid_merge_insertion_sort.h"
 #include "../include/bubble_sort.h"
+#include "../include/heap_sort.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,20 +10,15 @@
 
 #define TEST_ARRAY_COUNT 8
 #define ARRAY0_SIZE 10
-#define ARRAY1_SIZE 10
-#define ARRAY2_SIZE 10
-#define ARRAY3_SIZE 10
-#define ARRAY4_SIZE 10
-#define ARRAY5_SIZE 10
-#define ARRAY6_SIZE 10
-#define ARRAY7_SIZE 10
-// #define ARRAY1_SIZE 11
-// #define ARRAY2_SIZE 100
-// #define ARRAY3_SIZE 101
-// #define ARRAY4_SIZE 1000
-// #define ARRAY5_SIZE 1001
-// #define ARRAY6_SIZE 10000
-// #define ARRAY7_SIZE 10001
+#define ARRAY1_SIZE 11
+#define ARRAY2_SIZE 100
+#define ARRAY3_SIZE 101
+#define ARRAY4_SIZE 1000
+#define ARRAY5_SIZE 1001
+#define ARRAY6_SIZE 10000
+#define ARRAY7_SIZE 10001
+
+#define MAX_TEST_NUMBER 1000
 
 const int test_array_sizes[] = {ARRAY0_SIZE, ARRAY1_SIZE, ARRAY2_SIZE,
                                 ARRAY3_SIZE, ARRAY4_SIZE, ARRAY5_SIZE,
@@ -30,7 +26,7 @@ const int test_array_sizes[] = {ARRAY0_SIZE, ARRAY1_SIZE, ARRAY2_SIZE,
 
 void populate_with_random_ints(int32_t *numbers, int count) {
   for (int i = 0; i < count; i++) {
-    *numbers = random();
+    *numbers = random() % MAX_TEST_NUMBER;
     numbers++;
   }
 }
@@ -108,6 +104,7 @@ int main() {
   test_sort_function(test_arrays, merge_sort, "Merge Sort:");
   test_sort_function(test_arrays, hybrid_merge_insertion_sort, "Hybrid Merge-Insertion Sort:");
   test_sort_function(test_arrays, bubble_sort, "Bubble Sort:");
+  test_sort_function(test_arrays, heap_sort, "Heap Sort:");
 
   return 0;
 }
