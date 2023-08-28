@@ -8,7 +8,7 @@ fn insertionSort(numbers: []i32) void {
         while (compIdx > 0) : (compIdx -= 1) {
             if (numbers[compIdx - 1] > val) {
                 numbers[compIdx] = numbers[compIdx - 1];
-                numbers[compIdx - 1] = val;
+                numbers[compIdx - 1] = val; // slightly wasteful to do this copy here
             } else {
                 break;
             }
