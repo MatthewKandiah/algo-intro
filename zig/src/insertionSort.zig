@@ -1,4 +1,5 @@
 const std = @import("std");
+const util = @import("util.zig");
 
 fn insertionSort(numbers: []i32) void {
     var valIdx: usize = 1;
@@ -12,20 +13,6 @@ fn insertionSort(numbers: []i32) void {
             numbers[compIdx] = val;
         }
     }
-}
-
-fn randomiseIntegers(numbers: []i32, maxNumber: i32) void {
-    var rng = std.rand.DefaultPrng.init(@bitCast(std.time.microTimestamp()));
-    for (numbers) |*numberPtr| {
-        numberPtr.* = @mod(rng.random().int(i32), maxNumber + 1);
-    }
-}
-
-fn printNumbers(numbers: []i32) void {
-    for (numbers) |number| {
-        std.debug.print("{d}, ", .{number});
-    }
-    std.debug.print("\n", .{});
 }
 
 test "insertion sort - trivial case" {
@@ -62,16 +49,16 @@ test "insertion sort - random numbers" {
 
     for (0..RUN_NUMBER) |_| {
         var numbers: [100]i32 = undefined;
-        randomiseIntegers(&numbers, 100);
+        util.randomiseIntegers(&numbers, 100);
         if (DEBUG) {
             std.debug.print("Before sorting: ", .{});
-            printNumbers(&numbers);
+            util.printNumbers(&numbers);
         }
 
         insertionSort(&numbers);
         if (DEBUG) {
             std.debug.print("After sorting: ", .{});
-            printNumbers(&numbers);
+            util.printNumbers(&numbers);
         }
 
         for (1..numbers.len) |idx| {
