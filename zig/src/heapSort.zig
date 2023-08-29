@@ -47,15 +47,15 @@ fn buildMaxHeap(numbers: []i32) void {
 }
 
 pub fn heapSort(numbers: []i32) void {
-    if (numbers.len <= 1) return;
-
     buildMaxHeap(numbers);
 
-    const tmp: i32 = numbers[0];
-    numbers[0] = numbers[numbers.len - 1];
-    numbers[numbers.len - 1] = tmp;
-    
-    heapSort(numbers[0 .. numbers.len - 1]);
+    var heapSize = numbers.len;
+    while (heapSize > 1) : (heapSize -= 1) {
+        const tmp: i32 = numbers[0];
+        numbers[0] = numbers[heapSize - 1];
+        numbers[heapSize - 1] = tmp;
+        maxHeapify(numbers[0 .. heapSize - 1], 0);
+    }
 }
 
 test "build max heap - trivial case" {
