@@ -46,8 +46,8 @@ test "should make an empty stack of any size and type" {
     inline for (0..100) |i| {
         const t = types[i % types.len];
         const x = try Stack(t, i).init(allocator);
-        try std.testing.expect(x.data.len == i);
-        try std.testing.expect(x.head == 0);
+        try std.testing.expectEqual(i, x.data.len);
+        try std.testing.expectEqual(@as(usize, 0), x.head);
         try std.testing.expect(x.isEmpty());
         x.deinit(allocator);
     }
@@ -61,13 +61,13 @@ test "should push and pop integer values" {
     try x.push(1);
     try x.push(2);
     try x.push(3);
-    try std.testing.expect(x.head == 3);
-    try std.testing.expect(try x.pop() == 3);
-    try std.testing.expect(x.head == 2);
-    try std.testing.expect(try x.pop() == 2);
-    try std.testing.expect(x.head == 1);
-    try std.testing.expect(try x.pop() == 1);
-    try std.testing.expect(x.head == 0);
+    try std.testing.expectEqual(@as(usize, 3), x.head);
+    try std.testing.expectEqual(@as(i32, 3), try x.pop());
+    try std.testing.expectEqual(@as(usize, 2), x.head);
+    try std.testing.expectEqual(@as(i32, 2), try x.pop());
+    try std.testing.expectEqual(@as(usize, 1), x.head);
+    try std.testing.expectEqual(@as(i32, 1), try x.pop());
+    try std.testing.expectEqual(@as(usize, 0), x.head);
 }
 
 test "should push and pop string values" {
@@ -110,4 +110,3 @@ test "should error if you pop too many values" {
         try std.testing.expectEqual(StackError.Underflow, e);
     };
 }
-
