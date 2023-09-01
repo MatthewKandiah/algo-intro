@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const QueueError = error {
+const QueueError = error{
     Overflow,
     Underflow,
 };
@@ -19,23 +19,50 @@ fn Queue(comptime T: type, comptime sz: usize) type {
             };
         }
 
-        fn deinit(self: Self, allocator: std.mem.Allocator) !void {
+        fn deinit(self: *Self, allocator: std.mem.Allocator) !void {
             try allocator.free(self.data);
         }
 
+        fn isFull(self: Self) bool {
+            return self.head - self.tail >= sz;
+        }
+
         fn enqueue(self: *Self, val: T) QueueError!void {
-            self.data[self.head] = val;
+            if (self.isFull()) return QueueError.Overflow;
+            self.data[self.head % sz] = val;
             self.head += 1;
-            self.head %= sz;
         }
 
         fn dequeue(self: *Self) QueueError!T {
-            const val = self.data[self.tail];
+            if (self.tail == self.head) return QueueError.Underflow;
+            const val = self.data[self.tail % sz];
             self.tail += 1;
-            self.tail %= sz;
             return val;
         }
     };
+}
+
+test "should return if full" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    var x = try Queue(i32, 3).init(allocator);
+    try std.testing.expect(!x.isFull());
+
+    try x.enqueue(1);
+    try std.testing.expect(!x.isFull());
+
+    try x.enqueue(2);
+    try std.testing.expect(!x.isFull());
+
+    try x.enqueue(3);
+    try std.testing.expect(x.isFull());
+
+    _ = try x.dequeue();
+    try std.testing.expect(!x.isFull());
+
+    try x.enqueue(4);
+    try std.testing.expect(x.isFull());
 }
 
 test "should enqueue and dequeue values" {
@@ -72,4 +99,29 @@ test "should enqueue and dequeue values" {
     try std.testing.expectEqual(@as(i32, 5), try x.dequeue());
     try std.testing.expectEqual(@as(i32, 6), try x.dequeue());
     try std.testing.expectEqual(@as(i32, 7), try x.dequeue());
+
+    // worry about what is happening here after getting the logic sorted
+    // try x.deinit(allocator);
+}
+
+test "should return overflow error" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var x = try Queue(i32, 2).init(allocator);
+
+    try x.enqueue(1);
+    try x.enqueue(2);
+    x.enqueue(3) catch |e| try std.testing.expectEqual(QueueError.Overflow, e);
+}
+
+test "should return underflow error" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var x = try Queue(i32, 2).init(allocator);
+
+    _ = x.dequeue() catch |e| try std.testing.expectEqual(QueueError.Underflow, e);
+
+    try x.enqueue(1);
+    _ = try x.dequeue();
+    _ = x.dequeue() catch |e| try std.testing.expectEqual(QueueError.Underflow, e);
 }
