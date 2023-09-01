@@ -19,8 +19,8 @@ fn Queue(comptime T: type, comptime sz: usize) type {
             };
         }
 
-        fn deinit(self: *Self, allocator: std.mem.Allocator) !void {
-            try allocator.free(self.data);
+        fn deinit(self: *Self, allocator: std.mem.Allocator) void {
+            allocator.free(self.data);
         }
 
         fn isFull(self: Self) bool {
@@ -100,8 +100,7 @@ test "should enqueue and dequeue values" {
     try std.testing.expectEqual(@as(i32, 6), try x.dequeue());
     try std.testing.expectEqual(@as(i32, 7), try x.dequeue());
 
-    // worry about what is happening here after getting the logic sorted
-    // try x.deinit(allocator);
+    x.deinit(allocator);
 }
 
 test "should return overflow error" {
@@ -112,6 +111,7 @@ test "should return overflow error" {
     try x.enqueue(1);
     try x.enqueue(2);
     x.enqueue(3) catch |e| try std.testing.expectEqual(QueueError.Overflow, e);
+    x.deinit(allocator);
 }
 
 test "should return underflow error" {
@@ -124,4 +124,5 @@ test "should return underflow error" {
     try x.enqueue(1);
     _ = try x.dequeue();
     _ = x.dequeue() catch |e| try std.testing.expectEqual(QueueError.Underflow, e);
+    x.deinit(allocator);
 }
