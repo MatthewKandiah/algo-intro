@@ -1,8 +1,9 @@
-#include "../include/insertion_sort.h"
-#include "../include/merge_sort.h"
-#include "../include/hybrid_merge_insertion_sort.h"
 #include "../include/bubble_sort.h"
 #include "../include/heap_sort.h"
+#include "../include/hybrid_merge_insertion_sort.h"
+#include "../include/insertion_sort.h"
+#include "../include/merge_sort.h"
+#include "../include/stack.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,6 +83,9 @@ int main() {
   time_t t;
   srand(time(&t));
 
+  // test sorting algorithms
+
+  printf("Sorting Algorithm tests:\n");
   int32_t *test_arrays[TEST_ARRAY_COUNT];
   int32_t array0[ARRAY0_SIZE];
   int32_t array1[ARRAY1_SIZE];
@@ -102,9 +106,60 @@ int main() {
 
   test_sort_function(test_arrays, insertion_sort, "Insertion Sort:");
   test_sort_function(test_arrays, merge_sort, "Merge Sort:");
-  test_sort_function(test_arrays, hybrid_merge_insertion_sort, "Hybrid Merge-Insertion Sort:");
+  test_sort_function(test_arrays, hybrid_merge_insertion_sort,
+                     "Hybrid Merge-Insertion Sort:");
   test_sort_function(test_arrays, bubble_sort, "Bubble Sort:");
   test_sort_function(test_arrays, heap_sort, "Heap Sort:");
+
+  printf("Data structure tests:\n");
+  // test stack
+  printf("Stack:\n");
+  stack s5 = stack_init(5);
+  int s5TestFailed = 0;
+  printf("\tinitialisation...\n");
+  if (!stack_empty(s5)) {
+    printf("\tERROR: stack should initialise empty\n");
+    s5TestFailed = 1;
+  }
+  printf("\tpushing & popping - not to capacity...\n");
+  stack_push(&s5, 1);
+  stack_push(&s5, 2);
+  stack_push(&s5, 3);
+  int32_t firstPop = stack_pop(&s5);
+  int32_t secondPop = stack_pop(&s5);
+  if (stack_empty(s5)) {
+    printf("\tERROR: stack should not be empty\n");
+    s5TestFailed = 1;
+  }
+  if (stack_full(s5)) {
+    printf("\tERROR: stack should not be full\n");
+  }
+  printf("\tpushing & popping - to capacity...\n");
+  stack_push(&s5, 4);
+  stack_push(&s5, 5);
+  stack_push(&s5, 6);
+  stack_push(&s5, 7);
+  if (!stack_full(s5)) {
+    printf("\tERROR: stack should be full\n");
+    s5TestFailed = 1;
+  }
+  int32_t thirdPop = stack_pop(&s5);
+  int32_t fourthPop = stack_pop(&s5);
+  int32_t fifthPop = stack_pop(&s5);
+  int32_t sixthPop = stack_pop(&s5);
+  int32_t seventhPop = stack_pop(&s5);
+  if (!stack_empty(s5)) {
+    printf("\tError: stack should be empty\n");
+    s5TestFailed = 1;
+  }
+  printf("\tpopped values...\n");
+  if (!(firstPop == 3 && secondPop == 2 && thirdPop == 7 && fourthPop == 6 && fifthPop == 5 && sixthPop == 4 && seventhPop == 1)) {
+    printf("\tERROR: incorrect popped values\n");
+    s5TestFailed = 1;
+  }
+  if (!s5TestFailed) {
+    printf("\tAll tests passed!\n");
+  }
 
   return 0;
 }
