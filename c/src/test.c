@@ -4,6 +4,7 @@
 #include "../include/insertion_sort.h"
 #include "../include/merge_sort.h"
 #include "../include/stack.h"
+#include "../include/linked_list.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,11 +80,51 @@ void test_sort_function(int32_t **test_arrays, sort_function sort_function,
   report_test_results(test_arrays, message);
 }
 
+void verify_linked_list(LinkedList list, int32_t *numbers, int count) {
+  int test_failed = 0;
+  int too_many_elements = 0;
+  int element_index = 0;
+  LinkedListNode *currentNode = list.head;
+  while (1) {
+    if (element_index < count && !currentNode) {
+      test_failed = 1;
+      break;
+    }
+    if (element_index >= count) {
+      if (currentNode) {
+        test_failed = 1;
+        too_many_elements = 1;
+      }
+      break;
+    }
+    if (currentNode->key != numbers[element_index]) {
+      test_failed = 1;
+      break;
+    }
+    currentNode = currentNode->next;
+    element_index++;
+  }
+
+  if (!test_failed) {
+    printf("\tTest passed!\n");
+  } else {
+    printf("\tTest failed:\n");
+    if(too_many_elements) {
+      printf("\ttoo many elements\n");
+    }
+    printf("\texpected: ");
+    for (int i = 0; i < count; i++) {
+      printf("%d, ", numbers[i]);
+    }
+    printf("\n\treceived: ");
+    linkedListPrint(list);
+    printf("\n");
+  }
+}
+
 int main() {
   time_t t;
   srand(time(&t));
-
-  // test sorting algorithms
 
   printf("Sorting Algorithm tests:\n");
   int32_t *test_arrays[TEST_ARRAY_COUNT];
@@ -112,7 +153,6 @@ int main() {
   test_sort_function(test_arrays, heap_sort, "Heap Sort:");
 
   printf("Data structure tests:\n");
-  // test stack
   printf("Stack:\n");
   stack s5 = stack_init(5);
   int s5TestFailed = 0;
@@ -161,5 +201,14 @@ int main() {
     printf("\tAll tests passed!\n");
   }
 
+  printf("Linked List:\n");
+  printf("\tinitialisation...\t");
+  int32_t numbers[] = {1,2,3,4};
+  LinkedList linkedList = linkedListInit(numbers, 4);
+  verify_linked_list(linkedList, numbers, sizeof(numbers) / sizeof(int32_t));
+  printf("\tprepending...\t\t");
+  linkedListPrepend(&linkedList, 0);
+  int32_t prependedNumbers[] = {0,1,2,3,4};
+  verify_linked_list(linkedList, prependedNumbers, sizeof(prependedNumbers)/sizeof(int32_t));
   return 0;
 }

@@ -1,14 +1,14 @@
 CC = gcc
 CFLAGS = -Wall -g
 
-all: insertion_sort merge_sort hybrid_merge_insertion_sort bubble_sort heap_sort stack test
+all: insertion_sort merge_sort hybrid_merge_insertion_sort bubble_sort heap_sort stack linked_list test
 
 clean:
 	rm -rf obj bin
 	mkdir obj bin
 
 test: src/test.c
-	${CC} ${CFLAGS} src/test.c obj/insertion_sort.o obj/merge_sort.o obj/hybrid_merge_insertion_sort.o obj/bubble_sort.o obj/heap_sort.o obj/stack.o -o bin/test
+	${CC} ${CFLAGS} src/test.c obj/insertion_sort.o obj/merge_sort.o obj/hybrid_merge_insertion_sort.o obj/bubble_sort.o obj/heap_sort.o obj/stack.o obj/linked_list.o -o bin/test
 
 insertion_sort: src/insertion_sort.c
 	${CC} ${CFLAGS} -c src/insertion_sort.c -o obj/insertion_sort.o
@@ -27,4 +27,7 @@ heap_sort: src/heap_sort.c
 
 stack: src/stack.c
 	${CC} ${CFLAGS} -c src/stack.c -o obj/stack.o
+
+linked_list: src/linked_list.c
+	${CC} ${CFLAGS} -c src/linked_list.c -o obj/linked_list.o
 
