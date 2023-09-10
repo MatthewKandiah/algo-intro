@@ -210,5 +210,14 @@ int main() {
   linkedListPrepend(&linkedList, 0);
   int32_t prependedNumbers[] = {0,1,2,3,4};
   verify_linked_list(linkedList, prependedNumbers, sizeof(prependedNumbers)/sizeof(int32_t));
+  printf("\tsearching & inserting...\t");
+  LinkedListNode *node2 = linkedListSearch(linkedList, 2);
+  LinkedListNode *insertNode = malloc(sizeof(LinkedListNode));
+  insertNode->key = 7;
+  linkedListNodeInsert(node2, insertNode);
+  int32_t insertedNumbers[] = {0,1,2,7,3,4};
+  verify_linked_list(linkedList, insertedNumbers, sizeof(insertedNumbers)/sizeof(int32_t));
+
+  linkedListDeinit(linkedList);
   return 0;
 }

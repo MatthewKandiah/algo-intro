@@ -13,6 +13,15 @@ LinkedList linkedListInit(int32_t *numbers, int count) {
 	return list;
 }
 
+void linkedListDeinit(LinkedList list) {
+	LinkedListNode *currentNode = list.head;
+	while (currentNode) {
+		LinkedListNode *next = currentNode->next;
+		free(currentNode);
+		currentNode = next;
+	}
+}
+
 void linkedListPrint(LinkedList list) {
 	LinkedListNode *currentNode = list.head;
 	while (1) {
@@ -52,5 +61,27 @@ void linkedListReverse(LinkedList *list) {
 			break;
 		}
 	}
+}
+
+LinkedListNode *linkedListSearch(LinkedList list, int32_t value) {
+	LinkedListNode *currentNode = list.head;
+	while (currentNode) {
+		if (currentNode->key == value) {
+			return currentNode;
+		}
+		currentNode = currentNode->next;
+	}
+	return 0;
+}
+
+void linkedListNodeInsert(LinkedListNode *existingNode, LinkedListNode *newNode) {
+	if (existingNode->next) {
+		existingNode->next->prev = newNode;
+	}
+
+	newNode->next = existingNode->next;
+	newNode->prev = existingNode;
+
+	existingNode->next = newNode;
 }
 
