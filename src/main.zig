@@ -4,7 +4,24 @@ pub fn main() void {
     std.debug.print("Coming soon!", .{});
 }
 
-fn bubble_sort(comptime size: usize, comptime T: type, list: *[size]T) void {
+fn isSorted(comptime size: usize, comptime T: type, list: *const[size]T) bool {
+    for (0..list.len-1) |i| {
+        if (list[i] > list[i+1]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+test "isSorted should work" {
+    const sortedList = [_]i32{1,2,3,4,5};
+    const unsortedList = [_]i32{1,2,3,5,4};
+
+    try std.testing.expectEqual(isSorted(sortedList.len, i32, &sortedList), true);
+    try std.testing.expectEqual(isSorted(unsortedList.len, i32, &unsortedList), false);
+}
+
+fn bubbleSort(comptime size: usize, comptime T: type, list: *[size]T) void {
     for (0..list.len) |i| {
         for (0..list.len - 1 - i) |j| {
             const left = list[j];
@@ -19,17 +36,15 @@ fn bubble_sort(comptime size: usize, comptime T: type, list: *[size]T) void {
 
 test "bubble sort should work" {
     var list_i32 = [_]i32{ 5, 3, 2, 4, 1 };
-    var expectedResult_i32 = [_]i32{ 1, 2, 3, 4, 5 };
-    bubble_sort(list_i32.len, i32, &list_i32);
-    try std.testing.expectEqualSlices(i32, &expectedResult_i32, &list_i32);
+    bubbleSort(list_i32.len, i32, &list_i32);
+    try std.testing.expect(isSorted(list_i32.len, i32, &list_i32));
 
     var list_u8 = [_]u8{ 5, 3, 2, 4, 1 };
-    var expectedResult_u8 = [_]u8{ 1, 2, 3, 4, 5 };
-    bubble_sort(list_u8.len, u8, &list_u8);
-    try std.testing.expectEqualSlices(u8, &expectedResult_u8, &list_u8);
+    bubbleSort(list_u8.len, u8, &list_u8);
+    try std.testing.expect(isSorted(list_u8.len, u8, &list_u8));
 }
 
-fn insertion_sort(comptime size: usize, comptime T: type, list: *[size]T) void {
+fn insertionSort(comptime size: usize, comptime T: type, list: *[size]T) void {
     for (1..list.len) |i| {
         const value = list[i];
         var j: usize = 0;
@@ -47,7 +62,10 @@ fn insertion_sort(comptime size: usize, comptime T: type, list: *[size]T) void {
 
 test "insertion_sort should work" {
     var list_i32 = [_]i32{ 5, 3, 2, 4, 1 };
-    var expectedResult_i32 = [_]i32{ 1, 2, 3, 4, 5 };
-    insertion_sort(list_i32.len, i32, &list_i32);
-    try std.testing.expectEqualSlices(i32, &expectedResult_i32, &list_i32);
+    insertionSort(list_i32.len, i32, &list_i32);
+    try std.testing.expect(isSorted(list_i32.len, i32, &list_i32));
+
+    var list_u8 = [_]u8{ 5, 3, 2, 4, 1 };
+    insertionSort(list_u8.len, u8, &list_u8);
+    try std.testing.expect(isSorted(list_u8.len, u8, &list_u8));
 }
