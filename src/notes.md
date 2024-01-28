@@ -8,3 +8,8 @@
 - Also pretty simple
 - Quadratic time complexity
 - Maintain a sorted sub-array on the left of the target array. Iterate backwards through the sorted sub-array, and insert the element into the correct position. The sorted sub-array is now one element longer. Repeat until the whole target array is sorted.
+
+# Matrix Multiplication
+## Simple square matrices
+- Super simple
+- Basically just the definition of matrix multiplication
