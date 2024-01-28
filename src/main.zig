@@ -4,9 +4,9 @@ pub fn main() void {
     std.debug.print("Coming soon!", .{});
 }
 
-fn isSorted(comptime size: usize, comptime T: type, list: *const[size]T) bool {
-    for (0..list.len-1) |i| {
-        if (list[i] > list[i+1]) {
+fn isSorted(comptime size: usize, comptime T: type, list: *const [size]T) bool {
+    for (0..list.len - 1) |i| {
+        if (list[i] > list[i + 1]) {
             return false;
         }
     }
@@ -14,8 +14,8 @@ fn isSorted(comptime size: usize, comptime T: type, list: *const[size]T) bool {
 }
 
 test "isSorted should work" {
-    const sortedList = [_]i32{1,2,3,4,5};
-    const unsortedList = [_]i32{1,2,3,5,4};
+    const sortedList = [_]i32{ 1, 2, 3, 4, 5 };
+    const unsortedList = [_]i32{ 1, 2, 3, 5, 4 };
 
     try std.testing.expectEqual(isSorted(sortedList.len, i32, &sortedList), true);
     try std.testing.expectEqual(isSorted(unsortedList.len, i32, &unsortedList), false);
@@ -49,14 +49,14 @@ fn insertionSort(comptime size: usize, comptime T: type, list: *[size]T) void {
         const value = list[i];
         var j: usize = 0;
         while (j < i) {
-            if (list[i-1-j] > value) {
-                list[i-j] = list[i-1-j];
+            if (list[i - 1 - j] > value) {
+                list[i - j] = list[i - 1 - j];
                 j += 1;
             } else {
                 break;
             }
         }
-        list[i-j] = value;
+        list[i - j] = value;
     }
 }
 
