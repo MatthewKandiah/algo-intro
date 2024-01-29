@@ -13,3 +13,9 @@
 ## Simple square matrices
 - Super simple
 - Basically just the definition of matrix multiplication
+- Cubic time complexity
+
+## Simple recursive square matrices
+- A "divide and conquer" strategy
+- Cubic time complexity
+- Only applicable to square matrices whose dimension is an exact power of 2 (unless we tweak the base case)
