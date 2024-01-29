@@ -18,4 +18,8 @@
 ## Simple recursive square matrices
 - A "divide and conquer" strategy
 - Cubic time complexity
-- Only applicable to square matrices whose dimension is an exact power of 2 (unless we tweak the base case)
+- Only applicable to square matrices whose dimension is an exact power of 2 
+- An exercise to come back to, relax the input condition to allow multiplication of square matrices of arbitrary dimension of arbitrary dimension. Some thoughts:
+    - Could relax the base case to just do a standard matrix multiplication when the sub-matrix dimension is odd. Bit rubbish, simplifies to our non-recursive method for half of all numbers. Presumably this recursive method is useful for parallelising the calculation, which this method would be pretty rubbish for.
+    - Could pad with zeros, force the inputs to have dimensions which are an exact power of 2? Also feels pretty rubbish, we significantly increase our memory usage, and our number of operations jumps sharply when the dimension is increased just past a power of 2. If parallelising is the goal and we're going to run on many cores, maybe this is a decent solution though? 
+    - Be smarter in the splitting strategy. This is almost definitely what they are looking for but I'm struggling to see how you could divide an odd square matrix such that the dimensions allow for all the sub-matrix multiplications we need.
