@@ -1,102 +1,141 @@
 const std = @import("std");
 
-fn Heap(comptime capacity: usize) type {
-    return struct {
-        data: [capacity]i32,
-        size: usize = 0,
+fn heapSort(data: []i32) void {
+    buildMaxHeap(data);
+    var heapSize = data.len;
+    while (heapSize > 0) {
+        const tmp = data[0];
+        data[0] = data[heapSize - 1];
+        data[heapSize-1] = tmp;
 
-        fn init(data: [capacity]i32, size: usize) Heap(capacity) {
-            return Heap(capacity){
-                .data = data,
-                .size = size,
-            };
-        }
-    };
-}
-
-fn left(i: usize) usize {
-    return 2 * i + 1;
-}
-
-fn right(i: usize) usize {
-    return left(i) + 1;
-}
-
-// assume children at left(i) and right(i) are max heaps, rearrange such that i is the root of a valid max heap
-fn maxHeapify(comptime capacity: usize, heap: *Heap(capacity), i: usize) void {
-    const l = left(i);
-    const r = right(i);
-
-    var largest: usize = undefined;
-    if (l < heap.size and heap.data[l] > heap.data[i]) {
-        largest = l;
-    } else {
-        largest = i;
-    }
-    if (r < heap.size and heap.data[r] > heap.data[largest]) {
-        largest = r;
-    }
-
-    if (largest != i) {
-        const tmp = heap.data[i];
-        heap.data[i] = heap.data[largest];
-        heap.data[largest] = tmp;
-        maxHeapify(capacity, heap, largest);
+        heapSize -= 1;
+        maxHeapify(data[0..heapSize], 0);
     }
 }
 
-test "maxHeapify should work on 1 element tree" {
-    const capacity: comptime_int = 5;
-    const startingData = [capacity]i32{ 1, 2, 3, 4, 5 };
-    var heap = Heap(capacity).init(startingData, 1);
+test "heapSort should work" {
+    var a = [5]i32 {1,2,3,4,5};
+    var b = [5]i32 {5,4,3,2,1};
+    var c = [5]i32 {2,3,5,1,4};
 
-    maxHeapify(capacity, &heap, 0);
+    heapSort(&a);
+    heapSort(&b);
+    heapSort(&c);
 
-    try std.testing.expectEqualSlices(i32, &startingData, &heap.data);
+    const expected = [5]i32 {1,2,3,4,5};
+    try std.testing.expectEqualSlices(i32, &expected, &a);
+    try std.testing.expectEqualSlices(i32, &expected, &b);
+    try std.testing.expectEqualSlices(i32, &expected, &c);
 }
 
-test "maxHeapify should work on 2 element tree" {
-    const capacity: comptime_int = 5;
-    const startingData = [capacity]i32{1,2,3,4,5};
-    var heap = Heap(capacity).init(startingData, 2);
+test "heapSort should work for single element array" {
+    var a = [1]i32 {1};
 
-    maxHeapify(capacity, &heap, 0);
+    heapSort(&a);
 
-    const expectedData = [capacity]i32{2,1,3,4,5};
-    try std.testing.expectEqualSlices(i32, &expectedData, &heap.data);
+    const expected = [1]i32{1};
+    try std.testing.expectEqualSlices(i32, &expected, &a);
 }
 
-test "maxHeapify should work on 3 element tree" {
-    const capacity: comptime_int = 5;
-    const startingData = [capacity]i32{1,2,3,4,5};
-    var heap = Heap(capacity).init(startingData, 3);
+test "heapSort should work for empty array" {
+    var a = [0]i32 {};
     
-    maxHeapify(capacity, &heap, 0);
+    heapSort(&a);
 
-    const expectedData = [capacity]i32{3,2,1,4,5};
-    try std.testing.expectEqualSlices(i32, &expectedData, &heap.data);
+    const expected = [0]i32{};
+    try std.testing.expectEqualSlices(i32, &expected, &a);
+}
+
+test "heapSort should work for long array" {
+    var a: [10000]i32 = undefined;
+    var prng = std.rand.DefaultPrng.init(42);
+    for (0..a.len) |i| {
+        a[i] = prng.random().int(i32);
+    }
+
+    heapSort(&a);
+
+    for (1..a.len) |i| {
+        try std.testing.expect(a[i] >= a[i-1]);
+    }
+}
+
+fn buildMaxHeap(data: []i32) void {
+    for (0..data.len/2 + 1) |i| {
+        maxHeapify(data, data.len/2 - i);
+    }
+}
+
+fn maxHeapify(heap: []i32, rootIdx: usize) void {
+    const leftIdx = 2*rootIdx + 1;
+    const rightIdx = leftIdx + 1;
+    var largestIdx: usize = undefined;
+    if (leftIdx < heap.len and heap[leftIdx] > heap[rootIdx]) {
+        largestIdx = leftIdx;
+    } else {
+        largestIdx = rootIdx;
+    }
+    if (rightIdx < heap.len and heap[rightIdx] > heap[largestIdx]) {
+        largestIdx = rightIdx;
+    }
+
+    if (largestIdx != rootIdx) {
+        const tmp = heap[rootIdx];
+        heap[rootIdx] = heap[largestIdx];
+        heap[largestIdx] = tmp;
+
+        maxHeapify(heap, largestIdx);
+    }
+}
+
+test "maxHeapify should work on 1 element tree without touching rest of array" {
+    var array = [5]i32{ 1, 2, 3, 4, 5 };
+    var heap = array[0..1];
+
+    maxHeapify(heap, 0);
+
+    const expectedArray = [5]i32{1,2,3,4,5};
+    try std.testing.expectEqualSlices(i32, &expectedArray, &array);
+}
+
+test "maxHeapify should work on 2 element tree without touching rest of array" {
+    var array = [5]i32{1,2,3,4,5};
+    var heap = array[0..2];
+
+    maxHeapify(heap, 0);
+
+    const expectedArray = [5]i32{2,1,3,4,5};
+    try std.testing.expectEqualSlices(i32, &expectedArray, &array);
+}
+
+test "maxHeapify should work on 3 element tree without touching rest of array" {
+    var array = [5]i32{1,2,3,4,5};
+    var heap = array[0..3];
+    
+    maxHeapify(heap, 0);
+
+    const expectedArray = [5]i32{3,2,1,4,5};
+    try std.testing.expectEqualSlices(i32, &expectedArray, &array);
 }
 
 test "maxHeapify should work on large tree" {
-    const capacity: comptime_int = 10;
-    const startingData = [capacity]i32{1, 10,9,7,8,5,6,4,3,2};
-    var heap = Heap(capacity).init(startingData, 10);
+    var array = [10]i32{1, 10,9,7,8,5,6,4,3,2};
+    var heap = array[0..10];
 
-    maxHeapify(capacity, &heap, 0);
+    maxHeapify(heap, 0);
 
-    const expectedData = [capacity]i32{10,8,9,7,2,5,6,4,3,1};
-    try std.testing.expectEqualSlices(i32, &expectedData, &heap.data);
+    const expectedArray = [10]i32{10,8,9,7,2,5,6,4,3,1};
+    try std.testing.expectEqualSlices(i32, &expectedArray, &array);
 }
 
 test "maxHeapify should work without touching higher nodes" {
-    const capacity: comptime_int = 10;
-    const startingData = [capacity]i32{1,2,3,10,9,8,7,6,5,4};
-    var heap = Heap(capacity).init(startingData, 10);
+    var array = [10]i32{1,2,3,10,9,8,7,6,5,4};
+    var heap = array[0..10];
 
-    maxHeapify(capacity, &heap, 1);
+    maxHeapify(heap, 1);
 
-    const expectedData = [capacity]i32{1,10,3,6,9,8,7,2,5,4};
-    try std.testing.expectEqualSlices(i32, &expectedData, &heap.data);
+    const expectedArray = [10]i32{1,10,3,6,9,8,7,2,5,4};
+    try std.testing.expectEqualSlices(i32, &expectedArray, &array);
 }
 
-// TODO - buildMaxHeap and heapSort
+// buildMaxHeap
