@@ -29,6 +29,11 @@ There are 5 types of pointers:
 - decrement heap size by one and "max-heapify" from the root again, the next largest element will bubble to the top
 - repeat through the whole array, we are building a sorted sub-array at the back of the array
 
+## Quick sort
+- N*log(N) time on average, N^2 in worst case.
+- Sorts in place using a divide and conquer strategy.
+- Identify a pivot element. Rearrange the array into a low side and a high side with the pivot in between. Every element in the low side is less than or equal to the pivot. Every element in the high side is greater than or equal to the pivot. Repeat this on the low side and the high side, keep doing this until you have sorted the whole array!
+
 ### Time complexity
 - max-heapifying at a given node is O(log(N))
 - build max heap has O(N) steps, each calling max-heapify, so it's O(N*log(N))
