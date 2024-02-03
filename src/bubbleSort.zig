@@ -24,4 +24,3 @@ test "bubble sort should work" {
     bubbleSort(list_u8.len, u8, &list_u8);
     try std.testing.expect(isSorted(list_u8.len, u8, &list_u8));
 }
-

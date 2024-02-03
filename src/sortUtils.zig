@@ -16,4 +16,3 @@ test "isSorted should work" {
     try std.testing.expectEqual(isSorted(sortedList.len, i32, &sortedList), true);
     try std.testing.expectEqual(isSorted(unsortedList.len, i32, &unsortedList), false);
 }
-

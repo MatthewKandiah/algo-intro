@@ -136,14 +136,14 @@ fn doRecursiveSquareMatrixMultiply(
 }
 
 test "recursiveSquareMatrixMultiply should return error if illegal dimensions" {
-    const a = SquareMatrix(3) {.data = undefined};
+    const a = SquareMatrix(3){ .data = undefined };
     try std.testing.expectError(RecursiveSquareMatrixMultiplyError.NonPower2Dimensions, recursiveSquareMatrixMultiply(3, &a, &a));
 }
 
 test "recursiveSquareMatrixMultiply should work" {
-    var id8 = SquareMatrix(8) {.data = undefined};
-    var a = SquareMatrix(8) {.data = undefined};
-    var b = SquareMatrix(8) {.data = undefined};
+    var id8 = SquareMatrix(8){ .data = undefined };
+    var a = SquareMatrix(8){ .data = undefined };
+    var b = SquareMatrix(8){ .data = undefined };
     for (0..8) |i| {
         for (0..8) |j| {
             if (i == j) {
@@ -151,8 +151,8 @@ test "recursiveSquareMatrixMultiply should work" {
             } else {
                 id8.data[i][j] = 0;
             }
-            a.data[i][j] = @intCast(8*i + j);
-            b.data[i][j] = @intCast(64 + 8*i + j);
+            a.data[i][j] = @intCast(8 * i + j);
+            b.data[i][j] = @intCast(64 + 8 * i + j);
         }
     }
 
