@@ -4,14 +4,14 @@ fn quickSort(slice: []i32) void {
     if (slice.len > 0) {
         const keyIndex = partition(slice);
         quickSort(slice[0..keyIndex]);
-        quickSort(slice[keyIndex+1..]);
+        quickSort(slice[keyIndex + 1 ..]);
     }
 }
 
 fn partition(slice: []i32) usize {
     const key = slice[slice.len - 1];
     var lowSideHead: usize = 0;
-    for (0..slice.len-1) |i| {
+    for (0..slice.len - 1) |i| {
         if (slice[i] <= key) {
             const tmp = slice[lowSideHead];
             slice[lowSideHead] = slice[i];
@@ -19,21 +19,21 @@ fn partition(slice: []i32) usize {
             lowSideHead += 1;
         }
     }
-    slice[slice.len-1] = slice[lowSideHead];
+    slice[slice.len - 1] = slice[lowSideHead];
     slice[lowSideHead] = key;
     return lowSideHead;
 }
 
 test "quickSort should work" {
-    var a = [_]i32{1,2,3,4,5};
-    var b = [_]i32{5,4,3,2,1};
-    var c = [_]i32{2,4,1,5,3};
+    var a = [_]i32{ 1, 2, 3, 4, 5 };
+    var b = [_]i32{ 5, 4, 3, 2, 1 };
+    var c = [_]i32{ 2, 4, 1, 5, 3 };
 
     quickSort(&a);
     quickSort(&b);
     quickSort(&c);
 
-    const expected = [_]i32{1,2,3,4,5};
+    const expected = [_]i32{ 1, 2, 3, 4, 5 };
     try std.testing.expectEqualSlices(i32, &expected, &a);
     try std.testing.expectEqualSlices(i32, &expected, &b);
     try std.testing.expectEqualSlices(i32, &expected, &c);
