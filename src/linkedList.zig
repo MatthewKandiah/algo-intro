@@ -1,6 +1,6 @@
 const std = @import("std");
 
-fn Node(comptime T: type) type {
+pub fn Node(comptime T: type) type {
     return struct {
         prev: ?*Node(T),
         next: ?*Node(T),
@@ -8,18 +8,18 @@ fn Node(comptime T: type) type {
     };
 }
 
-fn DoublyLinkedList(comptime T: type) type {
+pub fn DoublyLinkedList(comptime T: type) type {
     return struct {
         head: ?*Node(T),
         allocator: std.mem.Allocator,
 
         const Self = @This();
 
-        fn init(allocator: std.mem.Allocator) Self {
+        pub fn init(allocator: std.mem.Allocator) Self {
             return Self{ .head = null, .allocator = allocator };
         }
 
-        fn deinit(self: *Self) void {
+        pub fn deinit(self: *const Self) void {
             var next = self.head;
             while (next != null) {
                 var newNext: ?*Node(T) = null;
@@ -31,7 +31,7 @@ fn DoublyLinkedList(comptime T: type) type {
             }
         }
 
-        fn prepend(self: *Self, value: T) !*Node(T) {
+        pub fn prepend(self: *Self, value: T) !*Node(T) {
             const node = try self.allocator.create(Node(T));
             node.key = value;
             node.prev = null;
@@ -47,7 +47,7 @@ fn DoublyLinkedList(comptime T: type) type {
 
         // since this only finds the first occurence of a value and is intended to be used with insert and delete, this list implementation doesn't work well for lists containing repeated values
         // should be fine for hash table, but might need rethinking if re-using in future
-        fn search(self: Self, value: T) ?*Node(T) {
+        pub fn search(self: Self, value: T) ?*Node(T) {
             var x = self.head;
             while (x != null and x.?.key != value) {
                 x = x.?.next;
@@ -55,7 +55,7 @@ fn DoublyLinkedList(comptime T: type) type {
             return x;
         }
 
-        fn insert(self: *Self, newKey: T, oldNode: *Node(T)) !void {
+        pub fn insert(self: *Self, newKey: T, oldNode: *Node(T)) !void {
             var newNode = try self.allocator.create(Node(T));
             newNode.key = newKey;
             newNode.prev = oldNode;
@@ -66,7 +66,7 @@ fn DoublyLinkedList(comptime T: type) type {
             oldNode.next = newNode;
         }
 
-        fn delete(self: *Self, oldNode: *Node(T)) void {
+        pub fn delete(self: *Self, oldNode: *Node(T)) void {
             defer {
                 self.allocator.destroy(oldNode);
             }
