@@ -54,3 +54,11 @@ There are 5 types of pointers:
     - Could relax the base case to just do a standard matrix multiplication when the sub-matrix dimension is odd. Bit rubbish, simplifies to our non-recursive method for half of all numbers. Presumably this recursive method is useful for parallelising the calculation, which this method would be pretty rubbish for.
     - Could pad with zeros, force the inputs to have dimensions which are an exact power of 2? Also feels pretty rubbish, we significantly increase our memory usage, and our number of operations jumps sharply when the dimension is increased just past a power of 2. If parallelising is the goal and we're going to run on many cores, maybe this is a decent solution though? 
     - Be smarter in the splitting strategy. This is almost definitely what they are looking for but I'm struggling to see how you could divide an odd square matrix such that the dimensions allow for all the sub-matrix multiplications we need.
+
+# Hash Tables
+- a dynamic set that supports the dictionary operations insert, search, and delete. 
+- typically backed by an array of pointers, we will use a key to index into the array to get a pointer to an element
+- managing collisions efficiently and defining a good hash function are important
+## Collision Resolution
+### Chaining
+- Instead of a backing array of pointers directly to elements, we have a backing array of pointers to linked lists. If there is no collision, the linked list is length 1. If we get a collision, we can prepend our element's node to the list. 
