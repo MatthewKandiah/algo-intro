@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn main() void {
-    std.debug.print("Executable does nothing yet. Use `zig test <path to source>` to run unit tests. Writing a build step that runs all the tests is on the todo list!", .{});
+    std.debug.print("Executable does nothing yet. Use `zig test src/lib.zig` to run all unit tests, or `zig test <path to source file>` to run specific tests", .{});
 }
 
 test "should pass" {
