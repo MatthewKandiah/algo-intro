@@ -61,35 +61,35 @@ fn trivialHash(value: i32) usize {
     return @intCast(abs(value));
 }
 
-fn firstLetterHash(str: [12]u8) usize {
+fn firstLetterHash(str: [*]const u8) usize {
     return switch (str[0]) {
-        'a', 'A' => 0,
-        'b', 'B' => 1,
-        'c', 'C' => 2,
-        'd', 'D' => 3,
-        'e', 'E' => 4,
-        'f', 'F' => 5,
-        'g', 'G' => 6,
-        'h', 'H' => 7,
-        'i', 'I' => 8,
-        'j', 'J' => 9,
-        'k', 'K' => 10,
-        'l', 'L' => 11,
-        'm', 'M' => 12,
-        'n', 'N' => 13,
-        'o', 'O' => 14,
-        'p', 'P' => 15,
-        'q', 'Q' => 16,
-        'r', 'R' => 17,
-        's', 'S' => 18,
-        't', 'T' => 19,
-        'u', 'U' => 20,
-        'v', 'V' => 21,
-        'w', 'W' => 22,
-        'x', 'X' => 23,
-        'y', 'Y' => 24,
-        'z', 'Z' => 25,
-        else => 26,
+        'a', 'A' => 1,
+        'b', 'B' => 2,
+        'c', 'C' => 3,
+        'd', 'D' => 4,
+        'e', 'E' => 5,
+        'f', 'F' => 6,
+        'g', 'G' => 7,
+        'h', 'H' => 8,
+        'i', 'I' => 9,
+        'j', 'J' => 10,
+        'k', 'K' => 11,
+        'l', 'L' => 12,
+        'm', 'M' => 13,
+        'n', 'N' => 14,
+        'o', 'O' => 15,
+        'p', 'P' => 16,
+        'q', 'Q' => 17,
+        'r', 'R' => 18,
+        's', 'S' => 19,
+        't', 'T' => 20,
+        'u', 'U' => 21,
+        'v', 'V' => 22,
+        'w', 'W' => 23,
+        'x', 'X' => 24,
+        'y', 'Y' => 25,
+        'z', 'Z' => 26,
+        else => 0,
     };
 }
 
@@ -140,26 +140,71 @@ test "should insert new value with table index wrapping" {
     try std.testing.expectEqual(@as(u16, 12), hashMap.table[2].head.?.key.value);
 }
 
-// test "should insert values with hash collisions" {
-//     try std.testing.expect(false);
-// }
-//
+test "should insert string keys and values" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) @panic("Memory leak");
+    }
+
+    var hashMap = HashMap(27, [*]const u8, [*]const u8).init(allocator, firstLetterHash);
+    defer {
+        hashMap.deinit();
+    }
+    _ = try hashMap.insert("antelope", "Barry");
+    _ = try hashMap.insert("bee", "Stephen");
+    _ = try hashMap.insert("cat", "Darren");
+    _ = try hashMap.insert("dog", "Jeff");
+
+    const RecordStringString = Record([*]const u8, [*]const u8);
+    try std.testing.expectEqual(RecordStringString{ .key = "antelope", .value = "Barry" }, hashMap.table[1].head.?.key);
+    try std.testing.expectEqual(RecordStringString{ .key = "bee", .value = "Stephen" }, hashMap.table[2].head.?.key);
+    try std.testing.expectEqual(RecordStringString{ .key = "cat", .value = "Darren" }, hashMap.table[3].head.?.key);
+    try std.testing.expectEqual(RecordStringString{ .key = "dog", .value = "Jeff" }, hashMap.table[4].head.?.key);
+}
+
+test "should insert values with hash collisions" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) @panic("Memory leak");
+    }
+
+    var hashMap = HashMap(5, i32, [*]const u8).init(allocator, trivialHash);
+    defer {
+        hashMap.deinit();
+    }
+    _ = try hashMap.insert(1, "first");
+    _ = try hashMap.insert(1, "second");
+    _ = try hashMap.insert(-1, "third");
+    _ = try hashMap.insert(6, "fourth");
+
+    const resultList = hashMap.table[1];
+    const RecordIntString = Record(i32, [*]const u8);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 6, .value = "fourth" }, resultList.head.?.key);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = -1, .value = "third" }, resultList.head.?.next.?.key);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "second" }, resultList.head.?.next.?.next.?.key);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "first" }, resultList.head.?.next.?.next.?.next.?.key);
+}
+
 // test "should search and return pointer to value node" {
 //     try std.testing.expect(false);
 // }
-//
+
 // test "should search and return pointer in collision chain" {
 //     try std.testing.expect(false);
 // }
-//
+
 // test "should delete value" {
 //     try std.testing.expect(false);
 // }
-//
+
 // test "should delete values in collision chain" {
 //     try std.testing.expect(false);
 // }
-//
+
 // test "should put a value - update if exists, else insert" {
 //     try std.testing.expect(false);
 // }
