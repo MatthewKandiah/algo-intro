@@ -1,5 +1,6 @@
 const std = @import("std");
 
+// TODO - refactor to take a Record {key, value} so we can search by key without knowing the value beforehand
 pub fn Node(comptime T: type) type {
     return struct {
         prev: ?*Node(T),
