@@ -36,6 +36,10 @@ fn HashMap(comptime size: usize, comptime K: type, comptime T: type) type {
         fn search(self: *const Self, key: K) ?*linkedList.Node(K, T) {
             return self.table[self.index(key)].search(key);
         }
+
+        fn delete(self: *Self, node: *linkedList.Node(K, T)) void {
+            self.table[self.index(node.record.key)].delete(node);
+        }
     };
 }
 
@@ -232,13 +236,47 @@ test "should search and return pointer in collision chain" {
     try std.testing.expectEqual(carrie, hashMap.search("ratto").?);
 }
 
-// test "should delete value" {
-//     try std.testing.expect(false);
-// }
+test "should delete value" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) @panic("Memory leak");
+    }
 
-// test "should delete values in collision chain" {
-//     try std.testing.expect(false);
-// }
+    var hashMap = HashMap(10, i32, usize).init(allocator, trivialHash);
+    defer {
+        hashMap.deinit();
+    }
+    const nodeOne = try hashMap.insert(1, 11);
+    const nodeTwo = try hashMap.insert(2, 22);
+    
+    hashMap.delete(nodeOne);
+
+    try std.testing.expectEqual(@as(?*linkedList.Node(i32, usize), null), hashMap.search(1));
+    try std.testing.expectEqual(nodeTwo, hashMap.search(2).?);
+}
+
+test "should delete values in collision chain" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) @panic("Memory leak");
+    }
+
+    var hashMap = HashMap(10, i32, usize).init(allocator, trivialHash);
+    defer {
+        hashMap.deinit();
+    }
+    const nodeOne = try hashMap.insert(1,11);
+    const nodeTwo = try hashMap.insert(-1, 22);
+
+    hashMap.delete(nodeOne);
+
+    try std.testing.expectEqual(@as(?*linkedList.Node(i32, usize), null), hashMap.search(1));
+    try std.testing.expectEqual(nodeTwo, hashMap.search(-1).?);
+}
 
 // test "should put a value - update if exists, else insert" {
 //     try std.testing.expect(false);
