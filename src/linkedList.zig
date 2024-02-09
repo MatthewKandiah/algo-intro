@@ -1,17 +1,23 @@
 const std = @import("std");
 
-// TODO - refactor to take a Record {key, value} so we can search by key without knowing the value beforehand
-pub fn Node(comptime T: type) type {
+pub fn Record(comptime K: type, comptime T: type) type {
     return struct {
-        prev: ?*Node(T),
-        next: ?*Node(T),
-        key: T,
+        key: K,
+        value: T,
     };
 }
 
-pub fn DoublyLinkedList(comptime T: type) type {
+pub fn Node(comptime K: type, comptime T: type) type {
     return struct {
-        head: ?*Node(T),
+        prev: ?*Node(K, T),
+        next: ?*Node(K, T),
+        record: Record(K, T),
+    };
+}
+
+pub fn DoublyLinkedList(comptime K: type, comptime T: type) type {
+    return struct {
+        head: ?*Node(K, T),
         allocator: std.mem.Allocator,
 
         const Self = @This();
@@ -23,7 +29,7 @@ pub fn DoublyLinkedList(comptime T: type) type {
         pub fn deinit(self: *const Self) void {
             var next = self.head;
             while (next != null) {
-                var newNext: ?*Node(T) = null;
+                var newNext: ?*Node(K, T) = null;
                 if (next) |nonOptionalNext| {
                     newNext = nonOptionalNext.next;
                     self.allocator.destroy(nonOptionalNext);
@@ -32,9 +38,10 @@ pub fn DoublyLinkedList(comptime T: type) type {
             }
         }
 
-        pub fn prepend(self: *Self, value: T) !*Node(T) {
-            const node = try self.allocator.create(Node(T));
-            node.key = value;
+        pub fn prepend(self: *Self, key: K, value: T) !*Node(K, T) {
+            const node = try self.allocator.create(Node(K, T));
+            const record = Record(K, T) {.key = key, .value = value};
+            node.record = record;
             node.prev = null;
             if (self.head) |oldHead| {
                 oldHead.prev = node;
@@ -48,17 +55,18 @@ pub fn DoublyLinkedList(comptime T: type) type {
 
         // since this only finds the first occurence of a value and is intended to be used with insert and delete, this list implementation doesn't work well for lists containing repeated values
         // should be fine for hash table, but might need rethinking if re-using in future
-        pub fn search(self: Self, value: T) ?*Node(T) {
+        pub fn search(self: Self, key: K) ?*Node(K, T) {
             var x = self.head;
-            while (x != null and x.?.key != value) {
+            while (x != null and x.?.record.key != key) {
                 x = x.?.next;
             }
             return x;
         }
 
-        pub fn insert(self: *Self, newKey: T, oldNode: *Node(T)) !void {
-            var newNode = try self.allocator.create(Node(T));
-            newNode.key = newKey;
+        pub fn insert(self: *Self, newKey: K, newValue: T, oldNode: *Node(K, T)) !void {
+            var newNode = try self.allocator.create(Node(K, T));
+            var newRecord = Record(K, T) {.key = newKey, .value = newValue};
+            newNode.record = newRecord;
             newNode.prev = oldNode;
             newNode.next = oldNode.next;
             if (newNode.next) |newNodeNext| {
@@ -67,7 +75,7 @@ pub fn DoublyLinkedList(comptime T: type) type {
             oldNode.next = newNode;
         }
 
-        pub fn delete(self: *Self, oldNode: *Node(T)) void {
+        pub fn delete(self: *Self, oldNode: *Node(K, T)) void {
             defer {
                 self.allocator.destroy(oldNode);
             }
@@ -91,20 +99,20 @@ test "prepend should work" {
         if (deinit_status == .leak) @panic("Memory leak");
     }
 
-    var list = DoublyLinkedList(i32).init(allocator);
+    var list = DoublyLinkedList(i32, i32).init(allocator);
     defer {
         list.deinit();
     }
 
-    const node1 = try list.prepend(1);
-    const node2 = try list.prepend(2);
-    const node3 = try list.prepend(3);
+    const node1 = try list.prepend(1, 10);
+    const node2 = try list.prepend(2, 20);
+    const node3 = try list.prepend(3, 30);
 
     try std.testing.expectEqual(node3, list.head.?);
-    try std.testing.expectEqual(@as(?*Node(i32), null), node3.prev);
+    try std.testing.expectEqual(@as(?*Node(i32, i32), null), node3.prev);
     try std.testing.expectEqual(node2, list.head.?.next.?);
     try std.testing.expectEqual(node1, list.head.?.next.?.next.?);
-    try std.testing.expectEqual(@as(?*Node(i32), null), list.head.?.next.?.next.?.next);
+    try std.testing.expectEqual(@as(?*Node(i32, i32), null), list.head.?.next.?.next.?.next);
 }
 
 test "search should work" {
@@ -115,20 +123,20 @@ test "search should work" {
         if (deinit_status == .leak) @panic("Memory leak");
     }
 
-    var list = DoublyLinkedList(i32).init(allocator);
+    var list = DoublyLinkedList(i32, i32).init(allocator);
     defer {
         list.deinit();
     }
 
-    _ = try list.prepend(1);
-    _ = try list.prepend(2);
-    _ = try list.prepend(3);
-    _ = try list.prepend(2);
+    _ = try list.prepend(1, 10);
+    _ = try list.prepend(2, 20);
+    _ = try list.prepend(3, 30);
+    _ = try list.prepend(2, 20);
 
     try std.testing.expectEqual(list.head, list.search(2));
     try std.testing.expectEqual(list.head.?.next, list.search(3));
     try std.testing.expectEqual(list.head.?.next.?.next.?.next, list.search(1));
-    try std.testing.expectEqual(@as(?*Node(i32), null), list.search(0));
+    try std.testing.expectEqual(@as(?*Node(i32, i32), null), list.search(0));
 }
 
 test "insert should work" {
@@ -139,26 +147,26 @@ test "insert should work" {
         if (deinit_status == .leak) @panic("Memory leak");
     }
 
-    var list = DoublyLinkedList(i32).init(allocator);
+    var list = DoublyLinkedList(i32, i32).init(allocator);
     defer {
         list.deinit();
     }
 
-    const node1 = try list.prepend(1);
-    const node2 = try list.prepend(2);
-    const node3 = try list.prepend(3);
+    const node1 = try list.prepend(1, 10);
+    const node2 = try list.prepend(2, 20);
+    const node3 = try list.prepend(3, 30);
 
-    try list.insert(4, node1);
-    try list.insert(5, node2);
-    try list.insert(6, node3);
+    try list.insert(4, 40, node1);
+    try list.insert(5, 50, node2);
+    try list.insert(6, 60, node3);
 
-    try std.testing.expectEqual(@as(i32, 3), list.head.?.key);
-    try std.testing.expectEqual(@as(i32, 6), list.head.?.next.?.key);
-    try std.testing.expectEqual(@as(i32, 2), list.head.?.next.?.next.?.key);
-    try std.testing.expectEqual(@as(i32, 5), list.head.?.next.?.next.?.next.?.key);
-    try std.testing.expectEqual(@as(i32, 1), list.head.?.next.?.next.?.next.?.next.?.key);
-    try std.testing.expectEqual(@as(i32, 4), list.head.?.next.?.next.?.next.?.next.?.next.?.key);
-    try std.testing.expectEqual(@as(?*Node(i32), null), list.head.?.next.?.next.?.next.?.next.?.next.?.next);
+    try std.testing.expectEqual(@as(i32, 3), list.head.?.record.key);
+    try std.testing.expectEqual(@as(i32, 6), list.head.?.next.?.record.key);
+    try std.testing.expectEqual(@as(i32, 2), list.head.?.next.?.next.?.record.key);
+    try std.testing.expectEqual(@as(i32, 5), list.head.?.next.?.next.?.next.?.record.key);
+    try std.testing.expectEqual(@as(i32, 1), list.head.?.next.?.next.?.next.?.next.?.record.key);
+    try std.testing.expectEqual(@as(i32, 4), list.head.?.next.?.next.?.next.?.next.?.next.?.record.key);
+    try std.testing.expectEqual(@as(?*Node(i32, i32), null), list.head.?.next.?.next.?.next.?.next.?.next.?.next);
 }
 
 test "delete should work" {
@@ -169,23 +177,23 @@ test "delete should work" {
         if (deinit_status == .leak) @panic("Memory leak");
     }
 
-    var list = DoublyLinkedList(i32).init(allocator);
+    var list = DoublyLinkedList(i32, i32).init(allocator);
     defer {
         list.deinit();
     }
 
-    const node1 = try list.prepend(1);
-    const node2 = try list.prepend(2);
-    const node3 = try list.prepend(3);
-    const node4 = try list.prepend(4);
-    const node5 = try list.prepend(5);
+    const node1 = try list.prepend(1, 10);
+    const node2 = try list.prepend(2, 20);
+    const node3 = try list.prepend(3, 30);
+    const node4 = try list.prepend(4, 40);
+    const node5 = try list.prepend(5, 50);
 
     list.delete(node5);
     list.delete(node3);
     list.delete(node1);
 
     try std.testing.expectEqual(node4, list.head.?);
-    try std.testing.expectEqual(@as(?*Node(i32), null), node4.prev);
+    try std.testing.expectEqual(@as(?*Node(i32, i32), null), node4.prev);
     try std.testing.expectEqual(node2, list.head.?.next.?);
-    try std.testing.expectEqual(@as(?*Node(i32), null), list.head.?.next.?.next);
+    try std.testing.expectEqual(@as(?*Node(i32, i32), null), list.head.?.next.?.next);
 }

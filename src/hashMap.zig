@@ -5,23 +5,16 @@ fn HashFunction(comptime T: type) type {
     return *const fn (key: T) usize;
 }
 
-fn Record(comptime K: type, comptime T: type) type {
-    return struct {
-        key: K,
-        value: T,
-    };
-}
-
 fn HashMap(comptime size: usize, comptime K: type, comptime T: type) type {
     return struct {
-        table: [size]linkedList.DoublyLinkedList(Record(K, T)),
+        table: [size]linkedList.DoublyLinkedList(K, T),
         hash: HashFunction(K),
 
         const Self = @This();
 
         fn init(allocator: std.mem.Allocator, hash: HashFunction(K)) Self {
             return Self{
-                .table = [1]linkedList.DoublyLinkedList(Record(K, T)){linkedList.DoublyLinkedList(Record(K, T)).init(allocator)} ** size,
+                .table = [1]linkedList.DoublyLinkedList(K, T){linkedList.DoublyLinkedList(K, T).init(allocator)} ** size,
                 .hash = hash,
             };
         }
@@ -37,8 +30,7 @@ fn HashMap(comptime size: usize, comptime K: type, comptime T: type) type {
         }
 
         fn insert(self: *Self, key: K, value: T) !void {
-            const record = Record(K, T){ .key = key, .value = value };
-            _ = try self.table[self.index(key)].prepend(record);
+            _ = try self.table[self.index(key)].prepend(key, value);
         }
     };
 }
@@ -102,7 +94,7 @@ test "should not memory leak" {
     }
 
     var hashMap = HashMap(10, i32, u8).init(allocator, rubbishHash);
-    _ = try hashMap.table[0].prepend(.{ .key = 1, .value = 2 }); // arbitrarily allocate some memory
+    _ = try hashMap.table[0].prepend(1, 2); // arbitrarily allocate some memory
     hashMap.deinit();
 }
 
@@ -120,7 +112,7 @@ test "should insert new value" {
     }
     _ = try hashMap.insert(2, 12);
 
-    try std.testing.expectEqual(@as(u16, 12), hashMap.table[2].head.?.key.value);
+    try std.testing.expectEqual(@as(u16, 12), hashMap.table[2].head.?.record.value);
 }
 
 test "should insert new value with table index wrapping" {
@@ -137,7 +129,7 @@ test "should insert new value with table index wrapping" {
     }
     _ = try hashMap.insert(12, 12);
 
-    try std.testing.expectEqual(@as(u16, 12), hashMap.table[2].head.?.key.value);
+    try std.testing.expectEqual(@as(u16, 12), hashMap.table[2].head.?.record.value);
 }
 
 test "should insert string keys and values" {
@@ -157,11 +149,11 @@ test "should insert string keys and values" {
     _ = try hashMap.insert("cat", "Darren");
     _ = try hashMap.insert("dog", "Jeff");
 
-    const RecordStringString = Record([*]const u8, [*]const u8);
-    try std.testing.expectEqual(RecordStringString{ .key = "antelope", .value = "Barry" }, hashMap.table[1].head.?.key);
-    try std.testing.expectEqual(RecordStringString{ .key = "bee", .value = "Stephen" }, hashMap.table[2].head.?.key);
-    try std.testing.expectEqual(RecordStringString{ .key = "cat", .value = "Darren" }, hashMap.table[3].head.?.key);
-    try std.testing.expectEqual(RecordStringString{ .key = "dog", .value = "Jeff" }, hashMap.table[4].head.?.key);
+    const RecordStringString = linkedList.Record([*]const u8, [*]const u8);
+    try std.testing.expectEqual(RecordStringString{ .key = "antelope", .value = "Barry" }, hashMap.table[1].head.?.record);
+    try std.testing.expectEqual(RecordStringString{ .key = "bee", .value = "Stephen" }, hashMap.table[2].head.?.record);
+    try std.testing.expectEqual(RecordStringString{ .key = "cat", .value = "Darren" }, hashMap.table[3].head.?.record);
+    try std.testing.expectEqual(RecordStringString{ .key = "dog", .value = "Jeff" }, hashMap.table[4].head.?.record);
 }
 
 test "should insert values with hash collisions" {
@@ -182,11 +174,11 @@ test "should insert values with hash collisions" {
     _ = try hashMap.insert(6, "fourth");
 
     const resultList = hashMap.table[1];
-    const RecordIntString = Record(i32, [*]const u8);
-    try std.testing.expectEqualDeep(RecordIntString{ .key = 6, .value = "fourth" }, resultList.head.?.key);
-    try std.testing.expectEqualDeep(RecordIntString{ .key = -1, .value = "third" }, resultList.head.?.next.?.key);
-    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "second" }, resultList.head.?.next.?.next.?.key);
-    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "first" }, resultList.head.?.next.?.next.?.next.?.key);
+    const RecordIntString = linkedList.Record(i32, [*]const u8);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 6, .value = "fourth" }, resultList.head.?.record);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = -1, .value = "third" }, resultList.head.?.next.?.record);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "second" }, resultList.head.?.next.?.next.?.record);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "first" }, resultList.head.?.next.?.next.?.next.?.record);
 }
 
 // test "should search and return pointer to value node" {
