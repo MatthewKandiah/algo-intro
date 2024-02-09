@@ -34,13 +34,11 @@ fn HashMap(comptime size: usize, comptime K: type, comptime T: type) type {
         }
 
         fn put(self: *Self, key: K, value: T) !*linkedList.Node(K, T) {
-            var found = self.search(key);
-            if (found == null) {
-                return try self.insert(key, value);
-            } else {
-                found.?.record.value = value;
-                return found.?;
+            if (self.search(key)) |found| {
+                found.record.value = value;
+                return found;
             }
+            return try self.insert(key, value);
         }
 
         fn search(self: *const Self, key: K) ?*linkedList.Node(K, T) {
