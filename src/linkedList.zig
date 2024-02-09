@@ -40,7 +40,7 @@ pub fn DoublyLinkedList(comptime K: type, comptime T: type) type {
 
         pub fn prepend(self: *Self, key: K, value: T) !*Node(K, T) {
             const node = try self.allocator.create(Node(K, T));
-            const record = Record(K, T) {.key = key, .value = value};
+            const record = Record(K, T){ .key = key, .value = value };
             node.record = record;
             node.prev = null;
             if (self.head) |oldHead| {
@@ -65,7 +65,7 @@ pub fn DoublyLinkedList(comptime K: type, comptime T: type) type {
 
         pub fn insert(self: *Self, newKey: K, newValue: T, oldNode: *Node(K, T)) !void {
             var newNode = try self.allocator.create(Node(K, T));
-            var newRecord = Record(K, T) {.key = newKey, .value = newValue};
+            var newRecord = Record(K, T){ .key = newKey, .value = newValue };
             newNode.record = newRecord;
             newNode.prev = oldNode;
             newNode.next = oldNode.next;

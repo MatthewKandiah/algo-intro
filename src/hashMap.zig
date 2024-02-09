@@ -250,7 +250,7 @@ test "should delete value" {
     }
     const nodeOne = try hashMap.insert(1, 11);
     const nodeTwo = try hashMap.insert(2, 22);
-    
+
     hashMap.delete(nodeOne);
 
     try std.testing.expectEqual(@as(?*linkedList.Node(i32, usize), null), hashMap.search(1));
@@ -269,7 +269,7 @@ test "should delete values in collision chain" {
     defer {
         hashMap.deinit();
     }
-    const nodeOne = try hashMap.insert(1,11);
+    const nodeOne = try hashMap.insert(1, 11);
     const nodeTwo = try hashMap.insert(-1, 22);
 
     hashMap.delete(nodeOne);

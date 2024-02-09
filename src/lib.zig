@@ -12,4 +12,3 @@ pub const hashMap = @import("hashMap.zig");
 test {
     std.testing.refAllDecls(@This());
 }
-
