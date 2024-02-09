@@ -95,8 +95,8 @@ test "prepend should work" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitestatus = gpa.deinit();
+        if (deinitestatus == .leak) @panic("Memory leak");
     }
 
     var list = DoublyLinkedList(i32, i32).init(allocator);
@@ -119,8 +119,8 @@ test "search should work" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitestatus = gpa.deinit();
+        if (deinitestatus == .leak) @panic("Memory leak");
     }
 
     var list = DoublyLinkedList(i32, i32).init(allocator);
@@ -143,8 +143,8 @@ test "insert should work" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitestatus = gpa.deinit();
+        if (deinitestatus == .leak) @panic("Memory leak");
     }
 
     var list = DoublyLinkedList(i32, i32).init(allocator);
@@ -173,8 +173,8 @@ test "delete should work" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitestatus = gpa.deinit();
+        if (deinitestatus == .leak) @panic("Memory leak");
     }
 
     var list = DoublyLinkedList(i32, i32).init(allocator);

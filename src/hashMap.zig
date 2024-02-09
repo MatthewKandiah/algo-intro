@@ -97,8 +97,8 @@ test "should not memory leak" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(10, i32, u8).init(allocator, rubbishHash);
@@ -110,8 +110,8 @@ test "should insert new value" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(10, i32, u16).init(allocator, trivialHash);
@@ -127,8 +127,8 @@ test "should insert new value with table index wrapping" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(10, i32, u16).init(allocator, trivialHash);
@@ -144,8 +144,8 @@ test "should insert string keys and values" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(27, [*]const u8, [*]const u8).init(allocator, firstLetterHash);
@@ -168,8 +168,8 @@ test "should insert values with hash collisions" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(5, i32, [*]const u8).init(allocator, trivialHash);
@@ -193,8 +193,8 @@ test "should search and return pointer to value node" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(27, [*]const u8, [*]const u8).init(allocator, firstLetterHash);
@@ -216,8 +216,8 @@ test "should search and return pointer in collision chain" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(27, [*]const u8, [*]const u8).init(allocator, firstLetterHash);
@@ -240,8 +240,8 @@ test "should delete value" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(10, i32, usize).init(allocator, trivialHash);
@@ -261,8 +261,8 @@ test "should delete values in collision chain" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("Memory leak");
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
     }
 
     var hashMap = HashMap(10, i32, usize).init(allocator, trivialHash);
