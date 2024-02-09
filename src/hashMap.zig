@@ -29,8 +29,12 @@ fn HashMap(comptime size: usize, comptime K: type, comptime T: type) type {
             return self.hash(key) % self.table.len;
         }
 
-        fn insert(self: *Self, key: K, value: T) !void {
-            _ = try self.table[self.index(key)].prepend(key, value);
+        fn insert(self: *Self, key: K, value: T) !*linkedList.Node(K, T) {
+            return try self.table[self.index(key)].prepend(key, value);
+        }
+
+        fn search(self: *const Self, key: K) ?*linkedList.Node(K, T) {
+            return self.table[self.index(key)].search(key);
         }
     };
 }
@@ -181,13 +185,52 @@ test "should insert values with hash collisions" {
     try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "first" }, resultList.head.?.next.?.next.?.next.?.record);
 }
 
-// test "should search and return pointer to value node" {
-//     try std.testing.expect(false);
-// }
+test "should search and return pointer to value node" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) @panic("Memory leak");
+    }
 
-// test "should search and return pointer in collision chain" {
-//     try std.testing.expect(false);
-// }
+    var hashMap = HashMap(27, [*]const u8, [*]const u8).init(allocator, firstLetterHash);
+    defer {
+        hashMap.deinit();
+    }
+
+    const larry = try hashMap.insert("dog", "Larry");
+    const barry = try hashMap.insert("cat", "Barry");
+    const harry = try hashMap.insert("rat", "Harry");
+
+    try std.testing.expectEqual(larry, hashMap.search("dog").?);
+    try std.testing.expectEqual(barry, hashMap.search("cat").?);
+    try std.testing.expectEqual(harry, hashMap.search("rat").?);
+    try std.testing.expectEqual(@as(?*linkedList.Node([*]const u8, [*]const u8), null), hashMap.search("something that isn't found"));
+}
+
+test "should search and return pointer in collision chain" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) @panic("Memory leak");
+    }
+
+    var hashMap = HashMap(27, [*]const u8, [*]const u8).init(allocator, firstLetterHash);
+    defer {
+        hashMap.deinit();
+    }
+
+    const larry = try hashMap.insert("dog", "Larry");
+    const barry = try hashMap.insert("doggo", "Barry");
+    const harry = try hashMap.insert("rat", "Harry");
+    const carrie = try hashMap.insert("ratto", "Carrie");
+
+    try std.testing.expectEqual(larry, hashMap.search("dog").?);
+    try std.testing.expectEqual(barry, hashMap.search("doggo").?);
+    try std.testing.expectEqual(harry, hashMap.search("rat").?);
+    try std.testing.expectEqual(carrie, hashMap.search("ratto").?);
+}
 
 // test "should delete value" {
 //     try std.testing.expect(false);
