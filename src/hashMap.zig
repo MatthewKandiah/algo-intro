@@ -33,6 +33,16 @@ fn HashMap(comptime size: usize, comptime K: type, comptime T: type) type {
             return try self.table[self.index(key)].prepend(key, value);
         }
 
+        fn put(self: *Self, key: K, value: T) !*linkedList.Node(K, T) {
+            var found = self.search(key);
+            if (found == null) {
+                return try self.insert(key, value);
+            } else {
+                found.?.record.value = value;
+                return found.?;
+            }
+        }
+
         fn search(self: *const Self, key: K) ?*linkedList.Node(K, T) {
             return self.table[self.index(key)].search(key);
         }
@@ -278,6 +288,27 @@ test "should delete values in collision chain" {
     try std.testing.expectEqual(nodeTwo, hashMap.search(-1).?);
 }
 
-// test "should put a value - update if exists, else insert" {
-//     try std.testing.expect(false);
-// }
+test "should put a value - update if exists, else insert" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinitStatus = gpa.deinit();
+        if (deinitStatus == .leak) @panic("Memory leak");
+    }
+
+    var hashMap = HashMap(5, i32, [*]const u8).init(allocator, trivialHash);
+    defer {
+        hashMap.deinit();
+    }
+    _ = try hashMap.put(1, "first");
+    _ = try hashMap.put(1, "second");
+    _ = try hashMap.put(-1, "third");
+    _ = try hashMap.put(6, "fourth");
+
+    const resultList = hashMap.table[1];
+    const RecordIntString = linkedList.Record(i32, [*]const u8);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 6, .value = "fourth" }, resultList.head.?.record);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = -1, .value = "third" }, resultList.head.?.next.?.record);
+    try std.testing.expectEqualDeep(RecordIntString{ .key = 1, .value = "second" }, resultList.head.?.next.?.next.?.record);
+    try std.testing.expectEqual(@as(?*linkedList.Node(i32, [*]const u8), null), resultList.head.?.next.?.next.?.next);
+}
