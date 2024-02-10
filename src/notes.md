@@ -62,3 +62,17 @@ There are 5 types of pointers:
 ## Collision Resolution
 ### Chaining
 - Instead of a backing array of pointers directly to elements, we have a backing array of pointers to linked lists. If there is no collision, the linked list is length 1. If we get a collision, we can prepend our element's node to the list. 
+- Insertion (without searching) is cheap. Requires allocation of additional memory, and pointer indirection reduces cpu cache efficiency.
+### Open Address Hashing
+- Calculate a key's hash to find it's preferred spot in the backing array. If that spot is already occupied, then we have a collision. Move to the next free space in the backing array, and insert the element there instead. 
+- Insertion may be more expensive (especially if we've had a lot of collisions and the table is getting full). Avoids the need to allocate extra memory besides the backing array, which may be preferable in memory-constrained applications. Keeps memory usage localised, which helps improve cpu cache efficiency, so this method may perform better on modern hardware than the usual, simplistic RAM model analysis would indicate.
+
+# Binary Search Trees
+## Binary Search Tree property
+- Every node in the tree has a value and up to two children. 
+- Every node's left child is less-than-or-equal-to it.
+- Every node's right child is greater-than-or-equal-to it.
+- Exploiting this property, basic operations on a binary search tree have time complexity proportional to the height of the tree.
+- In best cases where the height of the tree in minimised, this gives O(log(N))
+- In worst cases where the tree becomes a linear chain, this gives O(N)
+
