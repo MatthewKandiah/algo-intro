@@ -17,7 +17,7 @@ fn BinarySearchTree(comptime T: type) type {
         const Self = @This();
 
         fn init(allocator: std.mem.Allocator) Self {
-            return Self {
+            return Self{
                 .root = null,
                 .allocator = allocator,
             };
@@ -36,13 +36,12 @@ fn BinarySearchTree(comptime T: type) type {
 
         fn leftSubTree(self: *const Self) Self {
             // new tree's root has non-null previous
-            return Self {.root = self.left, .allocator = self.allocator};
+            return Self{ .root = self.left, .allocator = self.allocator };
         }
 
         fn rightSubTree(self: *const Self) Self {
             // new tree's root has non-null previous
-            return Self {.root = self.right, .allocator = self.allocator};
+            return Self{ .root = self.right, .allocator = self.allocator };
         }
     };
 }
-
