@@ -65,7 +65,7 @@ pub fn DoublyLinkedList(comptime K: type, comptime T: type) type {
 
         pub fn insert(self: *Self, newKey: K, newValue: T, oldNode: *Node(K, T)) !void {
             var newNode = try self.allocator.create(Node(K, T));
-            var newRecord = Record(K, T){ .key = newKey, .value = newValue };
+            const newRecord = Record(K, T){ .key = newKey, .value = newValue };
             newNode.record = newRecord;
             newNode.prev = oldNode;
             newNode.next = oldNode.next;

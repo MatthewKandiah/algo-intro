@@ -90,7 +90,7 @@ fn maxHeapify(heap: []i32, rootIdx: usize) void {
 
 test "maxHeapify should work on 1 element tree without touching rest of array" {
     var array = [5]i32{ 1, 2, 3, 4, 5 };
-    var heap = array[0..1];
+    const heap = array[0..1];
 
     maxHeapify(heap, 0);
 
@@ -100,7 +100,7 @@ test "maxHeapify should work on 1 element tree without touching rest of array" {
 
 test "maxHeapify should work on 2 element tree without touching rest of array" {
     var array = [5]i32{ 1, 2, 3, 4, 5 };
-    var heap = array[0..2];
+    const heap = array[0..2];
 
     maxHeapify(heap, 0);
 
@@ -110,7 +110,7 @@ test "maxHeapify should work on 2 element tree without touching rest of array" {
 
 test "maxHeapify should work on 3 element tree without touching rest of array" {
     var array = [5]i32{ 1, 2, 3, 4, 5 };
-    var heap = array[0..3];
+    const heap = array[0..3];
 
     maxHeapify(heap, 0);
 
@@ -120,7 +120,7 @@ test "maxHeapify should work on 3 element tree without touching rest of array" {
 
 test "maxHeapify should work on large tree" {
     var array = [10]i32{ 1, 10, 9, 7, 8, 5, 6, 4, 3, 2 };
-    var heap = array[0..10];
+    const heap = array[0..10];
 
     maxHeapify(heap, 0);
 
@@ -130,7 +130,7 @@ test "maxHeapify should work on large tree" {
 
 test "maxHeapify should work without touching higher nodes" {
     var array = [10]i32{ 1, 2, 3, 10, 9, 8, 7, 6, 5, 4 };
-    var heap = array[0..10];
+    const heap = array[0..10];
 
     maxHeapify(heap, 1);
 
