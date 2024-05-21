@@ -29,28 +29,38 @@ pub fn BinarySearchTree(comptime K: type) type {
             self.node_parents.deinit();
         }
 
+        fn add_new_node(
+            self: *Self,
+            key: K,
+            left_index: ?NodeIndex,
+            right_index: ?NodeIndex,
+            parent_index: ?NodeIndex,
+        ) !void {
+            try self.node_keys.append(key);
+            try self.node_lefts.append(left_index);
+            try self.node_rights.append(right_index);
+            try self.node_parents.append(parent_index);
+        }
+
         pub fn insert(self: *Self, new_value: K) !void {
-            var x_index = self.root;
-            var y_index: ?NodeIndex = null;
-            while (x_index) |x| {
-                y_index = x;
-                if (new_value < self.node_keys.items[x]) {
-                    x_index = self.node_lefts.items[x];
+            var compare_index = self.root;
+            var parent_index: ?NodeIndex = null;
+            while (compare_index) |idx| {
+                parent_index = idx;
+                if (new_value < self.node_keys.items[idx]) {
+                    compare_index = self.node_lefts.items[idx];
                 } else {
-                    x_index = self.node_rights.items[x];
+                    compare_index = self.node_rights.items[idx];
                 }
             }
 
             const new_node_index: NodeIndex = self.node_keys.items.len;
-            try self.node_keys.append(new_value);
-            try self.node_lefts.append(null);
-            try self.node_rights.append(null);
-            try self.node_parents.append(y_index);
-            if (y_index) |y| {
-                if (new_value < self.node_keys.items[y]) {
-                    self.node_lefts.items[y] = new_node_index;
+            try self.add_new_node(new_value, null, null, parent_index);
+            if (parent_index) |idx| {
+                if (new_value < self.node_keys.items[idx]) {
+                    self.node_lefts.items[idx] = new_node_index;
                 } else {
-                    self.node_rights.items[y] = new_node_index;
+                    self.node_rights.items[idx] = new_node_index;
                 }
             } else {
                 self.root = new_node_index;
