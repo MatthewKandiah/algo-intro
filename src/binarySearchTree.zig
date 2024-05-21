@@ -29,32 +29,32 @@ pub fn BinarySearchTree(comptime K: type) type {
             self.node_parents.deinit();
         }
 
-        pub fn verifyNodes(self: *const Self) bool {
-            const number_of_nodes = self.node_keys.items.len;
-            if (number_of_nodes != 0 and self.root == null) {
-                return false;
-            }
-            if (self.node_parents.items.len != number_of_nodes or self.node_lefts.items.len != number_of_nodes or self.node_rights.items.len != number_of_nodes) {
-                return false;
-            }
-
-            var node_without_parent = null;
-            for (self.node_parents, 0..) |parent, i| {
-                if (parent != null) {
-                    continue;
+        pub fn insert(self: *Self, new_value: K) !void {
+            var x_index = self.root;
+            var y_index: ?NodeIndex = null;
+            while (x_index) |x| {
+                y_index = x;
+                if (new_value < self.node_keys.items[x]) {
+                    x_index = self.node_lefts.items[x];
+                } else {
+                    x_index = self.node_rights.items[x];
                 }
-                if (node_without_parent != null) {
-                    return false;
+            }
+
+            const new_node_index: NodeIndex = self.node_keys.items.len;
+            try self.node_keys.append(new_value);
+            try self.node_lefts.append(null);
+            try self.node_rights.append(null);
+            try self.node_parents.append(y_index);
+            if (y_index) |y| {
+                if (new_value < self.node_keys.items[y]) {
+                    self.node_lefts.items[y] = new_node_index;
+                } else {
+                    self.node_rights.items[y] = new_node_index;
                 }
-                node_without_parent = i;
+            } else {
+                self.root = new_node_index;
             }
-            if (node_without_parent != self.root) {
-                return false;
-            }
-
-            // TODO: verify lefts and rights appear at most once, and parents appear at most twice
-
-            return true;
         }
     };
 }
@@ -81,4 +81,48 @@ test "should init and deinit without memory leaking" {
     try tree.node_parents.append(0);
 
     tree.deinit();
+}
+
+test "should insert new nodes in the binary search tree" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer {
+        const check = gpa.deinit();
+        if (check == .leak) {
+            @panic("Memory leak");
+        }
+    }
+
+    var tree = BinarySearchTree(i32).init(gpa.allocator());
+    defer tree.deinit();
+
+    try tree.insert(5);
+    try std.testing.expectEqual(0, tree.root);
+    try std.testing.expectEqualSlices(i32, &.{5}, tree.node_keys.items);
+    try std.testing.expectEqualSlices(?usize, &.{null}, tree.node_lefts.items);
+    try std.testing.expectEqualSlices(?usize, &.{null}, tree.node_rights.items);
+    try std.testing.expectEqualSlices(?usize, &.{null}, tree.node_parents.items);
+
+    try tree.insert(3);
+    try std.testing.expectEqual(0, tree.root);
+    try std.testing.expectEqualSlices(i32, &.{ 5, 3 }, tree.node_keys.items);
+    try std.testing.expectEqualSlices(?usize, &.{ 1, null }, tree.node_lefts.items);
+    try std.testing.expectEqualSlices(?usize, &.{ null, null }, tree.node_rights.items);
+    try std.testing.expectEqualSlices(?usize, &.{ null, 0 }, tree.node_parents.items);
+
+    try tree.insert(7);
+    try std.testing.expectEqual(0, tree.root);
+    try std.testing.expectEqualSlices(i32, &.{ 5, 3, 7 }, tree.node_keys.items);
+    try std.testing.expectEqualSlices(?usize, &.{ 1, null, null }, tree.node_lefts.items);
+    try std.testing.expectEqualSlices(?usize, &.{ 2, null, null }, tree.node_rights.items);
+    try std.testing.expectEqualSlices(?usize, &.{ null, 0, 0 }, tree.node_parents.items);
+
+    try tree.insert(4);
+    try tree.insert(2);
+    try tree.insert(5);
+    try tree.insert(9);
+    try std.testing.expectEqual(0, tree.root);
+    try std.testing.expectEqualSlices(i32, &.{ 5, 3, 7, 4, 2, 5, 9 }, tree.node_keys.items);
+    try std.testing.expectEqualSlices(?usize, &.{ 1, 4, 5, null, null, null, null }, tree.node_lefts.items);
+    try std.testing.expectEqualSlices(?usize, &.{ 2, 3, 6, null, null, null, null }, tree.node_rights.items);
+    try std.testing.expectEqualSlices(?usize, &.{ null, 0, 0, 1, 1, 2, 2 }, tree.node_parents.items);
 }
