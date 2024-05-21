@@ -1,47 +1,84 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
 
-fn Node(comptime T: type) type {
+pub fn BinarySearchTree(comptime K: type) type {
+    const NodeIndex: type = usize;
     return struct {
-        prev: ?*Node(T),
-        left: ?*Node(T),
-        right: ?*Node(T),
-        value: T,
-    };
-}
-
-fn BinarySearchTree(comptime T: type) type {
-    return struct {
-        root: ?*Node(T),
-        allocator: std.mem.Allocator,
+        root: ?NodeIndex,
+        node_keys: std.ArrayListAligned(K, null),
+        node_lefts: std.ArrayListAligned(?NodeIndex, null),
+        node_rights: std.ArrayListAligned(?NodeIndex, null),
+        node_parents: std.ArrayListAligned(?NodeIndex, null),
 
         const Self = @This();
 
-        fn init(allocator: std.mem.Allocator) Self {
+        pub fn init(allocator: Allocator) Self {
             return Self{
                 .root = null,
-                .allocator = allocator,
+                .node_keys = std.ArrayList(K).init(allocator),
+                .node_lefts = std.ArrayList(?NodeIndex).init(allocator),
+                .node_rights = std.ArrayList(?NodeIndex).init(allocator),
+                .node_parents = std.ArrayList(?NodeIndex).init(allocator),
             };
         }
 
-        fn deinit(self: *Self) void {
-            if (self.root) |root| {
-                // you could choose to deinitialise part of a sub tree and cause use-after-free bugs
-                // could add protection against that by checking if the root node has a non-null previous and disconnecting the sub tree / just not allowing you to deinit in that case
-                // not going to bother for now, something to reconsider if this causes pain later!
-                self.leftSubTree().deinit();
-                self.rightSubTree().deinit();
-                self.allocator.destroy(root);
+        pub fn deinit(self: *const Self) void {
+            self.node_keys.deinit();
+            self.node_lefts.deinit();
+            self.node_rights.deinit();
+            self.node_parents.deinit();
+        }
+
+        pub fn verifyNodes(self: *const Self) bool {
+            const number_of_nodes = self.node_keys.items.len;
+            if (number_of_nodes != 0 and self.root == null) {
+                return false;
             }
-        }
+            if (self.node_parents.items.len != number_of_nodes or self.node_lefts.items.len != number_of_nodes or self.node_rights.items.len != number_of_nodes) {
+                return false;
+            }
 
-        fn leftSubTree(self: *const Self) Self {
-            // new tree's root has non-null previous
-            return Self{ .root = self.left, .allocator = self.allocator };
-        }
+            var node_without_parent = null;
+            for (self.node_parents, 0..) |parent, i| {
+                if (parent != null) {
+                    continue;
+                }
+                if (node_without_parent != null) {
+                    return false;
+                }
+                node_without_parent = i;
+            }
+            if (node_without_parent != self.root) {
+                return false;
+            }
 
-        fn rightSubTree(self: *const Self) Self {
-            // new tree's root has non-null previous
-            return Self{ .root = self.right, .allocator = self.allocator };
+            // TODO: verify lefts and rights appear at most once, and parents appear at most twice
+
+            return true;
         }
     };
+}
+
+test "should init and deinit without memory leaking" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer {
+        const check = gpa.deinit();
+        if (check == .leak) {
+            @panic("Memory leak");
+        }
+    }
+    var tree = BinarySearchTree(u32).init(gpa.allocator());
+
+    tree.root = 0;
+    try tree.node_keys.append(1);
+    try tree.node_lefts.append(null);
+    try tree.node_rights.append(2);
+    try tree.node_parents.append(null);
+
+    try tree.node_keys.append(3);
+    try tree.node_lefts.append(null);
+    try tree.node_rights.append(null);
+    try tree.node_parents.append(0);
+
+    tree.deinit();
 }
