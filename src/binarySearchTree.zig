@@ -1,138 +1,356 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-pub fn BinarySearchTree(comptime K: type) type {
-    const NodeIndex: type = usize;
+pub fn BinarySearchTree(comptime Key: type) type {
     return struct {
-        root: ?NodeIndex,
-        node_keys: std.ArrayListAligned(K, null),
-        node_lefts: std.ArrayListAligned(?NodeIndex, null),
-        node_rights: std.ArrayListAligned(?NodeIndex, null),
-        node_parents: std.ArrayListAligned(?NodeIndex, null),
+        root: ?*Node,
+
+        pub const Node = struct {
+            key: Key,
+            parent: ?*Node,
+            left: ?*Node,
+            right: ?*Node,
+        };
 
         const Self = @This();
 
-        pub fn init(allocator: Allocator) Self {
-            return Self{
-                .root = null,
-                .node_keys = std.ArrayList(K).init(allocator),
-                .node_lefts = std.ArrayList(?NodeIndex).init(allocator),
-                .node_rights = std.ArrayList(?NodeIndex).init(allocator),
-                .node_parents = std.ArrayList(?NodeIndex).init(allocator),
-            };
-        }
-
-        pub fn deinit(self: *const Self) void {
-            self.node_keys.deinit();
-            self.node_lefts.deinit();
-            self.node_rights.deinit();
-            self.node_parents.deinit();
-        }
-
-        fn add_new_node(
-            self: *Self,
-            key: K,
-            left_index: ?NodeIndex,
-            right_index: ?NodeIndex,
-            parent_index: ?NodeIndex,
-        ) !void {
-            try self.node_keys.append(key);
-            try self.node_lefts.append(left_index);
-            try self.node_rights.append(right_index);
-            try self.node_parents.append(parent_index);
-        }
-
-        pub fn insert(self: *Self, new_value: K) !void {
-            var compare_index = self.root;
-            var parent_index: ?NodeIndex = null;
-            while (compare_index) |idx| {
-                parent_index = idx;
-                if (new_value < self.node_keys.items[idx]) {
-                    compare_index = self.node_lefts.items[idx];
+        pub fn search(self: *const Self, key: Key) ?*Node {
+            var current_node = self.root;
+            while (current_node) |node| {
+                if (key == node.key) {
+                    return node;
+                }
+                if (key < node.key) {
+                    current_node = node.left;
                 } else {
-                    compare_index = self.node_rights.items[idx];
+                    current_node = node.right;
                 }
             }
+            return null;
+        }
 
-            const new_node_index: NodeIndex = self.node_keys.items.len;
-            try self.add_new_node(new_value, null, null, parent_index);
-            if (parent_index) |idx| {
-                if (new_value < self.node_keys.items[idx]) {
-                    self.node_lefts.items[idx] = new_node_index;
+        pub fn minimum(self: *const Self) ?*Node {
+            if (self.root) |root| {
+                var current_node = root;
+                while (current_node.left) |next_node| {
+                    current_node = next_node;
+                }
+                return current_node;
+            } else {
+                return null;
+            }
+        }
+
+        pub fn insert(self: *Self, new_node: *Node) void {
+            var compare_node = self.root;
+            var parent_node: ?*Node = null;
+            while (compare_node) |cmp| {
+                parent_node = cmp;
+                if (new_node.key < cmp.key) {
+                    compare_node = cmp.left;
                 } else {
-                    self.node_rights.items[idx] = new_node_index;
+                    compare_node = cmp.right;
+                }
+            }
+            new_node.parent = parent_node;
+            if (parent_node) |pnt| {
+                if (new_node.key < pnt.key) {
+                    pnt.left = new_node;
+                } else {
+                    pnt.right = new_node;
                 }
             } else {
-                self.root = new_node_index;
+                self.root = new_node;
             }
+        }
+
+        pub fn transplant(self: *Self, target: *Node, replacement: ?*Node) void {
+            if (target.parent) |pnt| {
+                if (pnt.left == target) {
+                    pnt.left = replacement;
+                } else {
+                    pnt.right = replacement;
+                }
+            } else {
+                self.root = replacement;
+            }
+            if (replacement) |rpl| {
+                rpl.parent = target.parent;
+            }
+        }
+
+        pub fn delete(self: *Self, delete_node: *Node) void {
+            if (delete_node.left == null) {
+                self.transplant(delete_node, delete_node.right);
+            } else if (delete_node.right == null) {
+                self.transplant(delete_node, delete_node.left);
+            } else {
+                const sub_tree = BinarySearchTree(Key){ .root = delete_node.right };
+                var successor = sub_tree.minimum().?;
+                if (successor != delete_node.right) {
+                    self.transplant(successor, successor.right);
+                    successor.right = delete_node.right;
+                    successor.right.?.parent = successor;
+                }
+                self.transplant(delete_node, successor);
+                successor.left = delete_node.left;
+                successor.left.?.parent = successor;
+            }
+        }
+
+        pub fn init() Self {
+            return Self{ .root = null };
         }
     };
 }
 
-test "should init and deinit without memory leaking" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        const check = gpa.deinit();
-        if (check == .leak) {
-            @panic("Memory leak");
-        }
-    }
-    var tree = BinarySearchTree(u32).init(gpa.allocator());
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+const allocator = gpa.allocator();
 
-    tree.root = 0;
-    try tree.node_keys.append(1);
-    try tree.node_lefts.append(null);
-    try tree.node_rights.append(2);
-    try tree.node_parents.append(null);
+test "repeated inserts should generate well-formed binary search tree" {
+    const BTree = BinarySearchTree(u32);
+    var tree = BTree.init();
+    var node1 = try allocator.create(BTree.Node);
+    node1.key = 5;
+    node1.parent = null;
+    node1.left = null;
+    node1.right = null;
+    var node2 = try allocator.create(BTree.Node);
+    node2.key = 7;
+    node2.parent = null;
+    node2.left = null;
+    node2.right = null;
+    var node3 = try allocator.create(BTree.Node);
+    node3.key = 3;
+    node3.parent = null;
+    node3.left = null;
+    node3.right = null;
+    var node4 = try allocator.create(BTree.Node);
+    node4.key = 1;
+    node4.parent = null;
+    node4.left = null;
+    node4.right = null;
+    var node5 = try allocator.create(BTree.Node);
+    node5.key = 2;
+    node5.parent = null;
+    node5.left = null;
+    node5.right = null;
 
-    try tree.node_keys.append(3);
-    try tree.node_lefts.append(null);
-    try tree.node_rights.append(null);
-    try tree.node_parents.append(0);
+    tree.insert(node1);
+    tree.insert(node2);
+    tree.insert(node3);
+    tree.insert(node4);
+    tree.insert(node5);
 
-    tree.deinit();
+    try std.testing.expectEqual(tree.root, node1);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node1.parent);
+    try std.testing.expectEqual(node3, node1.left);
+    try std.testing.expectEqual(node2, node1.right);
+    try std.testing.expect(node1.key > node1.left.?.key);
+    try std.testing.expect(node1.key <= node1.right.?.key);
+
+    try std.testing.expectEqual(node1, node2.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.right);
+
+    try std.testing.expectEqual(node1, node3.parent);
+    try std.testing.expectEqual(node4, node3.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node3.right);
+    try std.testing.expect(node3.key > node3.left.?.key);
+
+    try std.testing.expectEqual(node3, node4.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node4.left);
+    try std.testing.expectEqual(node5, node4.right);
+    try std.testing.expect(node4.key <= node4.right.?.key);
+
+    try std.testing.expectEqual(node4, node5.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.right);
 }
 
-test "should insert new nodes in the binary search tree" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        const check = gpa.deinit();
-        if (check == .leak) {
-            @panic("Memory leak");
-        }
-    }
+test "search should return correct node pointer" {
+    const BTree = BinarySearchTree(i8);
+    var tree = BTree.init();
+    var node1 = try allocator.create(BTree.Node);
+    node1.key = 5;
+    node1.parent = null;
+    node1.left = null;
+    node1.right = null;
+    var node2 = try allocator.create(BTree.Node);
+    node2.key = -7;
+    node2.parent = null;
+    node2.left = null;
+    node2.right = null;
+    var node3 = try allocator.create(BTree.Node);
+    node3.key = 3;
+    node3.parent = null;
+    node3.left = null;
+    node3.right = null;
+    var node4 = try allocator.create(BTree.Node);
+    node4.key = -1;
+    node4.parent = null;
+    node4.left = null;
+    node4.right = null;
+    var node5 = try allocator.create(BTree.Node);
+    node5.key = 2;
+    node5.parent = null;
+    node5.left = null;
+    node5.right = null;
 
-    var tree = BinarySearchTree(i32).init(gpa.allocator());
-    defer tree.deinit();
+    tree.insert(node1);
+    tree.insert(node2);
+    tree.insert(node3);
+    tree.insert(node4);
+    tree.insert(node5);
 
-    try tree.insert(5);
-    try std.testing.expectEqual(0, tree.root);
-    try std.testing.expectEqualSlices(i32, &.{5}, tree.node_keys.items);
-    try std.testing.expectEqualSlices(?usize, &.{null}, tree.node_lefts.items);
-    try std.testing.expectEqualSlices(?usize, &.{null}, tree.node_rights.items);
-    try std.testing.expectEqualSlices(?usize, &.{null}, tree.node_parents.items);
+    try std.testing.expectEqual(node1, tree.search(5));
+    try std.testing.expectEqual(node2, tree.search(-7));
+    try std.testing.expectEqual(node3, tree.search(3));
+    try std.testing.expectEqual(node4, tree.search(-1));
+    try std.testing.expectEqual(node5, tree.search(2));
+    try std.testing.expectEqual(@as(?*BTree.Node, null), tree.search(100));
+}
 
-    try tree.insert(3);
-    try std.testing.expectEqual(0, tree.root);
-    try std.testing.expectEqualSlices(i32, &.{ 5, 3 }, tree.node_keys.items);
-    try std.testing.expectEqualSlices(?usize, &.{ 1, null }, tree.node_lefts.items);
-    try std.testing.expectEqualSlices(?usize, &.{ null, null }, tree.node_rights.items);
-    try std.testing.expectEqualSlices(?usize, &.{ null, 0 }, tree.node_parents.items);
+test "delete should remove a node from the tree while maintaining binary search tree property" {
+    const BTree = BinarySearchTree(u64);
+    var tree = BTree.init();
+    var node1 = try allocator.create(BTree.Node);
+    node1.key = 5;
+    node1.parent = null;
+    node1.left = null;
+    node1.right = null;
+    var node2 = try allocator.create(BTree.Node);
+    node2.key = 7;
+    node2.parent = null;
+    node2.left = null;
+    node2.right = null;
+    var node3 = try allocator.create(BTree.Node);
+    node3.key = 3;
+    node3.parent = null;
+    node3.left = null;
+    node3.right = null;
+    var node4 = try allocator.create(BTree.Node);
+    node4.key = 1;
+    node4.parent = null;
+    node4.left = null;
+    node4.right = null;
+    var node5 = try allocator.create(BTree.Node);
+    node5.key = 2;
+    node5.parent = null;
+    node5.left = null;
+    node5.right = null;
 
-    try tree.insert(7);
-    try std.testing.expectEqual(0, tree.root);
-    try std.testing.expectEqualSlices(i32, &.{ 5, 3, 7 }, tree.node_keys.items);
-    try std.testing.expectEqualSlices(?usize, &.{ 1, null, null }, tree.node_lefts.items);
-    try std.testing.expectEqualSlices(?usize, &.{ 2, null, null }, tree.node_rights.items);
-    try std.testing.expectEqualSlices(?usize, &.{ null, 0, 0 }, tree.node_parents.items);
+    tree.insert(node1);
+    tree.insert(node2);
+    tree.insert(node3);
+    tree.insert(node4);
+    tree.insert(node5);
 
-    try tree.insert(4);
-    try tree.insert(2);
-    try tree.insert(5);
-    try tree.insert(9);
-    try std.testing.expectEqual(0, tree.root);
-    try std.testing.expectEqualSlices(i32, &.{ 5, 3, 7, 4, 2, 5, 9 }, tree.node_keys.items);
-    try std.testing.expectEqualSlices(?usize, &.{ 1, 4, 5, null, null, null, null }, tree.node_lefts.items);
-    try std.testing.expectEqualSlices(?usize, &.{ 2, 3, 6, null, null, null, null }, tree.node_rights.items);
-    try std.testing.expectEqualSlices(?usize, &.{ null, 0, 0, 1, 1, 2, 2 }, tree.node_parents.items);
+    tree.delete(node3);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), tree.search(3));
+
+    try std.testing.expectEqual(tree.root, node1);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node1.parent);
+    try std.testing.expectEqual(node4, node1.left);
+    try std.testing.expectEqual(node2, node1.right);
+    try std.testing.expect(node1.key > node1.left.?.key);
+    try std.testing.expect(node1.key <= node1.right.?.key);
+
+    try std.testing.expectEqual(node1, node2.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.right);
+
+    try std.testing.expectEqual(node1, node4.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node4.left);
+    try std.testing.expectEqual(node5, node4.right);
+    try std.testing.expect(node4.key <= node4.right.?.key);
+
+    try std.testing.expectEqual(node4, node5.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.right);
+
+    tree.delete(node1);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), tree.search(5));
+
+    try std.testing.expectEqual(tree.root, node2);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.parent);
+    try std.testing.expectEqual(node4, node2.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.right);
+    try std.testing.expect(node2.key > node2.left.?.key);
+
+    try std.testing.expectEqual(node2, node4.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node4.left);
+    try std.testing.expectEqual(node5, node4.right);
+    try std.testing.expect(node4.key <= node4.right.?.key);
+
+    try std.testing.expectEqual(node4, node5.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.right);
+}
+
+test "should handle tricky deletion case where we transplant a distant node and also transplant its right child" {
+    const BTree = BinarySearchTree(f32);
+    var tree = BTree.init();
+    var node1 = try allocator.create(BTree.Node);
+    node1.key = 2; // root
+    node1.parent = null;
+    node1.left = null;
+    node1.right = null;
+    var node2 = try allocator.create(BTree.Node);
+    node2.key = 1; // left
+    node2.parent = null;
+    node2.left = null;
+    node2.right = null;
+    var node3 = try allocator.create(BTree.Node);
+    node3.key = 10; // right
+    node3.parent = null;
+    node3.left = null;
+    node3.right = null;
+    var node4 = try allocator.create(BTree.Node);
+    node4.key = 9; // right left
+    node4.parent = null;
+    node4.left = null;
+    node4.right = null;
+    var node5 = try allocator.create(BTree.Node);
+    node5.key = 8; // right left left
+    node5.parent = null;
+    node5.left = null;
+    node5.right = null;
+    var node6 = try allocator.create(BTree.Node);
+    node6.key = 8.5; // right left left right
+    node6.parent = null;
+    node6.left = null;
+    node6.right = null;
+
+    tree.insert(node1);
+    tree.insert(node2);
+    tree.insert(node3);
+    tree.insert(node4);
+    tree.insert(node5);
+    tree.insert(node6);
+
+    tree.delete(node1);
+
+    try std.testing.expectEqual(@as(?*BTree.Node, null), tree.search(2));
+
+    try std.testing.expectEqual(node5, tree.root);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node5.parent);
+    try std.testing.expectEqual(node2, node5.left);
+    try std.testing.expectEqual(node3, node5.right);
+
+    try std.testing.expectEqual(node5, node2.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node2.right);
+
+    try std.testing.expectEqual(node5, node3.parent);
+    try std.testing.expectEqual(node4, node3.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node3.right);
+
+    try std.testing.expectEqual(node3, node4.parent);
+    try std.testing.expectEqual(node6, node4.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node4.right);
+
+    try std.testing.expectEqual(node4, node6.parent);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node6.left);
+    try std.testing.expectEqual(@as(?*BTree.Node, null), node6.right);
 }
