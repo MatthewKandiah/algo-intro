@@ -160,3 +160,24 @@ test "should get correct breadth first search result" {
     try std.testing.expectEqualSlices(?usize, &.{ 2, 1, 2, 1, 0, 1, 2, 3, 3 }, &distances);
     try std.testing.expectEqualSlices(?usize, &.{ 1, 4, 1, 4, null, 4, 3, 2, 6 }, &parents);
 }
+
+test "should get correct breadth first search result with unreachable nodes" {
+    var graph_buf: [81]bool = undefined;
+    var graph = Graph(9).init(&graph_buf);
+    graph.setAdjacencyList(0, .{ false, true, false, true, false, false, false, false, false });
+    graph.setAdjacencyList(1, .{ true, false, true, false, true, false, false, false, false });
+    graph.setAdjacencyList(2, .{ false, true, false, false, false, true, false, true, false });
+    graph.setAdjacencyList(3, .{ true, false, false, false, true, false, true, false, false });
+    graph.setAdjacencyList(4, .{ false, true, false, true, false, true, false, false, false });
+    graph.setAdjacencyList(5, .{ false, false, true, false, true, false, true, false, false });
+    graph.setAdjacencyList(6, .{ false, false, false, true, false, true, false, true, false });
+    graph.setAdjacencyList(7, .{ false, false, true, false, false, false, true, false, false });
+    graph.setAdjacencyList(8, .{ false, false, false, false, false, false, false, false, false });
+
+    var distances: [9]?usize = undefined;
+    var parents: [9]?usize = undefined;
+    graph.bfs(4, &distances, &parents);
+
+    try std.testing.expectEqualSlices(?usize, &.{ 2, 1, 2, 1, 0, 1, 2, 3, null }, &distances);
+    try std.testing.expectEqualSlices(?usize, &.{ 1, 4, 1, 4, null, 4, 3, 2, null }, &parents);
+}
