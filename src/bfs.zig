@@ -26,25 +26,29 @@ pub fn Graph(comptime V: usize) type {
             return self.data[idx .. idx + V];
         }
 
+        // NOTE - using in-out arguments to avoid the need to pass in a memory allocator, if we want to do any performance profiling, it's nice to avoid allocations muddying results!
         // set distances to array res where res[i] is the distance from source to i, null if unreachable
-        pub fn bfs(self: Self, source: usize, distances: *[V]?usize) void {
+        // set parents to array res where res[i] is the parent of node i on the identified shortest path from source to i
+        pub fn bfs(self: Self, source: usize, distances: *[V]?usize, parents: *[V]?usize) void {
             var colours: [V]BfsColour = .{.White} ** V;
             for (distances) |*d| {
                 d.* = null;
+            }
+            for (parents) |*p| {
+                p.* = null;
             }
             colours[source] = .Grey;
             distances[source] = 0;
             var queue = Queue(V).init();
             queue.enqueue(source);
             while (queue.size > 0) {
-                std.debug.print("queue.size: {}, queue.data: {any}, distances: {any}\n", .{ queue.size, queue.data, distances });
                 const current_vertex = queue.dequeue();
                 const adj_list = self.getAdjacencyList(current_vertex);
-                std.debug.print("current_vertex: {}, adj_list: {any}\n", .{ current_vertex, adj_list });
                 for (0..V) |i| {
                     if (adj_list[i] and colours[i] == .White) {
                         colours[i] = .Grey;
                         distances[i] = (distances[current_vertex] orelse @panic("Will never happen")) + 1;
+                        parents[i] = current_vertex;
                         queue.enqueue(i);
                     }
                 }
@@ -89,9 +93,7 @@ fn Queue(comptime capacity: usize) type {
                 @panic("Should never happen");
             }
             const res = self.data[0];
-            std.debug.print("dequeue: before shift: {any}\n", .{self.data});
             std.mem.copyForwards(usize, self.data[0 .. self.size - 1], self.data[1..self.size]);
-            std.debug.print("dequeue: after shift: {any}\n", .{self.data});
             self.size -= 1;
             return res;
         }
@@ -101,9 +103,9 @@ fn Queue(comptime capacity: usize) type {
 test "should set vertex adjacency list" {
     var graph_buf: [9]bool = undefined;
     var graph = Graph(3).init(&graph_buf);
-    graph.setAdjacencyList(0, .{false, false, false});
+    graph.setAdjacencyList(0, .{ false, false, false });
     graph.setAdjacencyList(1, .{ true, false, true });
-    graph.setAdjacencyList(2, .{false, false, false});
+    graph.setAdjacencyList(2, .{ false, false, false });
 
     try std.testing.expectEqualSlices(bool, &.{ false, false, false, true, false, true, false, false, false }, graph.data);
 }
@@ -151,8 +153,10 @@ test "should get correct breadth first search result" {
     graph.setAdjacencyList(7, .{ false, false, true, false, false, false, true, false, true });
     graph.setAdjacencyList(8, .{ false, false, false, false, false, false, true, true, false });
 
-    var distances: [9]?usize = .{null} ** 9;
-    graph.bfs(4, &distances);
+    var distances: [9]?usize = undefined;
+    var parents: [9]?usize = undefined;
+    graph.bfs(4, &distances, &parents);
 
     try std.testing.expectEqualSlices(?usize, &.{ 2, 1, 2, 1, 0, 1, 2, 3, 3 }, &distances);
+    try std.testing.expectEqualSlices(?usize, &.{ 1, 4, 1, 4, null, 4, 3, 2, 6 }, &parents);
 }
