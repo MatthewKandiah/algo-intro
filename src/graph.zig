@@ -30,7 +30,7 @@ pub fn Graph(comptime V: usize) type {
         // set distances to array res where res[i] is the distance from source to i, null if unreachable
         // set parents to array res where res[i] is the parent of node i on the identified shortest path from source to i
         pub fn bfs(self: Self, source: usize, distances: *[V]?usize, parents: *[V]?usize) void {
-            var colours: [V]BfsColour = .{.White} ** V;
+            var colours: [V]Colour = .{.White} ** V;
             for (distances) |*d| {
                 d.* = null;
             }
@@ -55,10 +55,46 @@ pub fn Graph(comptime V: usize) type {
                 colours[current_vertex] = .Black;
             }
         }
+
+        pub fn dfs(self: Self, discovers: *[V]?usize, finishes: *[V]?usize, parents: *[V]?usize) void {
+            var colours: [V]Colour = .{.White} ** V;
+            for (discovers) |*d| {
+                d.* = null;
+            }
+            for (finishes) |*f| {
+                f.* = null;
+            }
+            for (parents) |*p| {
+                p.* = null;
+            }
+            var time: usize = 0;
+
+            for (0..V) |i| {
+                if (colours[i] == .White) {
+                    dfsAux(self, i, &time, discovers, finishes, parents, &colours);
+                }
+            }
+        }
+
+        fn dfsAux(self: Self, current_vertex: usize, time: *usize, discovers: *[V]?usize, finishes: *[V]?usize, parents: *[V]?usize, colours: *[V]Colour) void {
+            time.* += 1;
+            discovers[current_vertex] = time.*;
+            colours[current_vertex] = .Grey;
+            const adj_list = self.getAdjacencyList(current_vertex);
+            for (0..V) |i| {
+                if (adj_list[i] and colours[i] == .White) {
+                    parents[i] = current_vertex;
+                    dfsAux(self, i, time, discovers, finishes, parents, colours);
+                }
+            }
+            time.* += 1;
+            finishes[current_vertex] = time.*;
+            colours[current_vertex] = .Black;
+        }
     };
 }
 
-const BfsColour = enum {
+const Colour = enum {
     White,
     Grey,
     Black,
@@ -180,4 +216,27 @@ test "should get correct breadth first search result with unreachable nodes" {
 
     try std.testing.expectEqualSlices(?usize, &.{ 2, 1, 2, 1, 0, 1, 2, 3, null }, &distances);
     try std.testing.expectEqualSlices(?usize, &.{ 1, 4, 1, 4, null, 4, 3, 2, null }, &parents);
+}
+
+test "should get correct depth first search result" {
+    var graph_buf: [81]bool = undefined;
+    var graph = Graph(9).init(&graph_buf);
+    graph.setAdjacencyList(0, .{ false, true, false, true, false, false, false, false, false });
+    graph.setAdjacencyList(1, .{ true, false, true, false, true, false, false, false, false });
+    graph.setAdjacencyList(2, .{ false, true, false, false, false, true, false, true, false });
+    graph.setAdjacencyList(3, .{ true, false, false, false, true, false, true, false, false });
+    graph.setAdjacencyList(4, .{ false, true, false, true, false, true, false, false, false });
+    graph.setAdjacencyList(5, .{ false, false, true, false, true, false, true, false, false });
+    graph.setAdjacencyList(6, .{ false, false, false, true, false, true, false, true, true });
+    graph.setAdjacencyList(7, .{ false, false, true, false, false, false, true, false, true });
+    graph.setAdjacencyList(8, .{ false, false, false, false, false, false, true, true, false });
+
+    var discovers: [9]?usize = undefined;
+    var finishes: [9]?usize = undefined;
+    var parents: [9]?usize = undefined;
+    graph.dfs(&discovers, &finishes, &parents);
+
+    try std.testing.expectEqualSlices(?usize, &.{ 1, 2, 3, 6, 5, 4, 7, 8, 9 }, &discovers);
+    try std.testing.expectEqualSlices(?usize, &.{ 18, 17, 16, 13, 14, 15, 12, 11, 10 }, &finishes);
+    try std.testing.expectEqualSlices(?usize, &.{ null, 0, 1, 4, 5, 2, 3, 6, 7 }, &parents);
 }
