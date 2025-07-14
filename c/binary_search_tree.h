@@ -15,3 +15,5 @@ Node *rec_search(Node *, int64_t);
 Node *itr_search(Node *, int64_t);
 Node *minimum(Node *);
 Node *maximum(Node *);
+Node *successor(Node *); // get the next node visited in an ordered walk
+Node* predecessor(Node *); // get the previous node visited in an ordered walk

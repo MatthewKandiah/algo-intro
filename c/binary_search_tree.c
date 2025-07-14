@@ -1,6 +1,8 @@
 #include "./binary_search_tree.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int main(void) {
   Node example2 = {
@@ -32,6 +34,12 @@ int main(void) {
   example7.parent = &example6;
   example7.right = &example8;
 
+  example2.parent = &example5b;
+
+  example5a.parent = &example5b;
+
+  example8.parent = &example7;
+
   printf("print_in_order\n");
   print_in_order(&example6);
 
@@ -56,6 +64,22 @@ int main(void) {
   printf("\n");
   printf("maximum as expected: %d\n", maximum(&example6) == &example8);
   printf("minimum as expected: %d\n", minimum(&example6) == &example2);
+
+  printf("\n");
+  printf("successor of 2 as expected: %d\n", successor(&example2) == &example5b);
+  printf("successor of 5b as expected: %d\n", successor(&example5b) == &example5a);
+  printf("successor of 5a as expected: %d\n", successor(&example5a) == &example6);
+  printf("successor of 6 as expected: %d\n", successor(&example6) == &example7);
+  printf("successor of 7 as expected: %d\n", successor(&example7) == &example8);
+  printf("successor of 8 as expected: %d\n", successor(&example8) == NULL);
+
+  printf("\n");
+  printf("predecessor of 2 as expected: %d\n", predecessor(&example2) == NULL);
+  printf("predecessor of 5b as expected: %d\n", predecessor(&example5b) == &example2);
+  printf("predecessor of 5a as expected: %d\n", predecessor(&example5a) == &example5b);
+  printf("predecessor of 6 as expected: %d\n", predecessor(&example6) == &example5a);
+  printf("predecessor of 7 as expected: %d\n", predecessor(&example7) == &example6);
+  printf("predecessor of 8 as expected: %d\n", predecessor(&example8) == &example7);
 }
 
 bool is_binary_search_tree(Node *root) {
@@ -121,3 +145,36 @@ Node *maximum(Node *node) {
   }
   return node;
 }
+
+Node *successor(Node *node) {
+  if (!node) {
+    fprintf(stderr, "ASSERT: cannot find successor of nil pointer");
+    exit(1);
+  }
+  if (node->right) {
+    return minimum(node->right);
+  }
+  Node *parent_node = node->parent;
+  while (parent_node && node->key == parent_node->right->key) {
+    node = parent_node;
+    parent_node = parent_node->parent;
+  }
+  return parent_node;
+}
+
+Node *predecessor(Node *node) {
+  if (!node) {
+    fprintf(stderr, "ASSERT: cannot find predessor of nil pointer");
+    exit(1);
+  }
+  if (node->left) {
+    return maximum(node->left);
+  }
+  Node *parent_node = node->parent;
+  while (parent_node && node->key == parent_node->left->key) {
+    node = parent_node;
+    parent_node = parent_node->parent;
+  }
+  return parent_node;
+}
+
