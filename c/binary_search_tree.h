@@ -22,3 +22,5 @@ Node *maximum(Node *);
 Node *successor(Node *);   // get the next node visited in an ordered walk
 Node *predecessor(Node *); // get the previous node visited in an ordered walk
 void tree_insert(BinarySearchTree *, Node *);
+void tree_transplant(BinarySearchTree*, Node *old_node, Node *new_node); // replaces one subtree as the child of its parent with another subtree
+void tree_delete(BinarySearchTree *, Node *);
