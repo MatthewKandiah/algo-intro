@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+typedef struct {
+  struct Node *root;
+} BinarySearchTree;
+
 typedef struct Node {
   int64_t key;
   struct Node *parent;
@@ -15,5 +19,6 @@ Node *rec_search(Node *, int64_t);
 Node *itr_search(Node *, int64_t);
 Node *minimum(Node *);
 Node *maximum(Node *);
-Node *successor(Node *); // get the next node visited in an ordered walk
-Node* predecessor(Node *); // get the previous node visited in an ordered walk
+Node *successor(Node *);   // get the next node visited in an ordered walk
+Node *predecessor(Node *); // get the previous node visited in an ordered walk
+void tree_insert(BinarySearchTree *, Node *);
