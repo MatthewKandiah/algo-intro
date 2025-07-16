@@ -33,6 +33,7 @@ typedef struct Graph {
 
 Graph graph_create(int vertex_count, int edge_count, char *edge_string);
 void graph_print(Graph);
+Index parse_index_from_string(char *, int);
 void graph_initialise_single_source(Graph *graph, Index start_vertex);
 void graph_relax_edge(Graph *graph, Index edge_index);
 bool graph_bellman_ford(Graph *graph, Index start_vertex); // return false if negative weight cycle found i.e. no finite length shortest path exists

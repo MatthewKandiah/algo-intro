@@ -42,10 +42,12 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
   int start_chars_count = 0;
   int end_chars_count = 0;
 
+  int chars_read = 0;
   int edges_read = 0;
   bool reading_start_chars = true;
   while (edges_read < edge_count) {
-    switch (*edge_string) {
+    char value = edge_string[chars_read];
+    switch (value) {
     case '\0':
       if (edges_read != edge_count - 1) {
         fprintf(stderr, "ERROR: end of edge string found before expected edge "
@@ -53,8 +55,8 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
         exit(1);
       } else {
         Index start =
-            strtol(start_chars_buf, &start_chars_buf + start_chars_count, 10);
-        Index end = strtol(end_chars_buf, &end_chars_buf + end_chars_count, 10);
+            parse_index_from_string(start_chars_buf, start_chars_count);
+        Index end = parse_index_from_string(end_chars_buf, end_chars_count);
         edges[edges_read].start = start;
         edges[edges_read].end = end;
         edges[edges_read].weight = 1; // TODO - make this easy to set too
@@ -72,10 +74,10 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
     case '8':
     case '9':
       if (reading_start_chars) {
-        start_chars_buf[start_chars_count] = *edge_string;
+        start_chars_buf[start_chars_count] = value;
         start_chars_count++;
       } else {
-        end_chars_buf[end_chars_count] = *edge_string;
+        end_chars_buf[end_chars_count] = value;
         end_chars_count++;
       }
       break;
@@ -115,9 +117,10 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
       fprintf(stderr, "ERROR: unexpected character in edge string");
       exit(1);
     }
-    edge_string += 1;
+    chars_read += 1;
   }
 
+  // TODO - segfault? aren't these needed?
   // free(start_chars_buf);
   // free(end_chars_buf);
   Graph graph = {
@@ -127,6 +130,15 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
       .vertices = vertices,
   };
   return graph;
+}
+
+Index parse_index_from_string(char *buf, int len) {
+  Index res = 0;
+  for (int i = 0; i < len; ++i) {
+    int x = buf[i] - '0';
+    res = res * 10 + x;
+  }
+  return res;
 }
 
 void initialise_single_source(Graph *graph, Index start_vertex) {
