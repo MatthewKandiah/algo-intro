@@ -1,8 +1,133 @@
 #include "./single_shortest_path.h"
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-int main(void) { printf("%s", "Hello, World!\n"); }
+int main(void) {
+  Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5");
+  graph_print(g);
+}
+
+void graph_print(Graph g) {
+  printf("Vertex Count: %d\nEdge Count: %d\n", g.vertex_count, g.edge_count);
+
+  printf("Vertices:\n");
+  for (int i = 0; i < g.vertex_count; ++i) {
+    Vertex vertex = g.vertices[i];
+    printf("\t%d. distance = %ld, parent = %d\n", i, vertex.distance,
+           vertex.parent);
+  }
+
+  printf("Edges:\n");
+  for (int i = 0; i < g.edge_count; ++i) {
+    Edge edge = g.edges[i];
+    printf("\t%d. start = %d, end = %d, weight = %ld\n", i, edge.start,
+           edge.end, edge.weight);
+  }
+}
+
+Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
+  Vertex *vertices = malloc(sizeof(Vertex) * vertex_count);
+  Edge *edges = malloc(sizeof(Edge) * edge_count);
+
+  int max_chars_in_edge_string = 0;
+  int vertex_count_copy = vertex_count;
+  while (vertex_count_copy > 0) {
+    max_chars_in_edge_string++;
+    vertex_count_copy /= 10;
+  }
+
+  char *start_chars_buf = malloc(sizeof(char) * max_chars_in_edge_string);
+  char *end_chars_buf = malloc(sizeof(char) * max_chars_in_edge_string);
+  int start_chars_count = 0;
+  int end_chars_count = 0;
+
+  int edges_read = 0;
+  bool reading_start_chars = true;
+  while (edges_read < edge_count) {
+    switch (*edge_string) {
+    case '\0':
+      if (edges_read != edge_count - 1) {
+        fprintf(stderr, "ERROR: end of edge string found before expected edge "
+                        "count reached");
+        exit(1);
+      } else {
+        Index start =
+            strtol(start_chars_buf, &start_chars_buf + start_chars_count, 10);
+        Index end = strtol(end_chars_buf, &end_chars_buf + end_chars_count, 10);
+        edges[edges_read].start = start;
+        edges[edges_read].end = end;
+        edges[edges_read].weight = 1; // TODO - make this easy to set too
+        edges_read++;
+      }
+      break;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      if (reading_start_chars) {
+        start_chars_buf[start_chars_count] = *edge_string;
+        start_chars_count++;
+      } else {
+        end_chars_buf[end_chars_count] = *edge_string;
+        end_chars_count++;
+      }
+      break;
+    case ',':
+    case ' ':
+      if (!reading_start_chars) {
+        reading_start_chars = true;
+
+        Index start =
+            strtol(start_chars_buf, &start_chars_buf + start_chars_count, 10);
+        Index end = strtol(end_chars_buf, &end_chars_buf + end_chars_count, 10);
+        printf(
+            "start: %d, end: %d, end_chars_count: %d, end_chars_buf[0]: %c\n",
+            start, end, end_chars_count, end_chars_buf[0]);
+        edges[edges_read].start = start;
+        edges[edges_read].end = end;
+        edges[edges_read].weight = 1; // TODO - make this easy to set too
+        edges_read++;
+
+        start_chars_count = 0;
+        end_chars_count = 0;
+      } else {
+        fprintf(stderr,
+                "ERROR: unexpected ',' or ' ' character in edge string");
+        exit(1);
+      }
+      break;
+    case '-':
+      if (reading_start_chars) {
+        reading_start_chars = false;
+      } else {
+        fprintf(stderr, "ERROR: unexpected '-' character in edge string");
+        exit(1);
+      }
+      break;
+    default:
+      fprintf(stderr, "ERROR: unexpected character in edge string");
+      exit(1);
+    }
+    edge_string += 1;
+  }
+
+  // free(start_chars_buf);
+  // free(end_chars_buf);
+  Graph graph = {
+      .edge_count = edge_count,
+      .vertex_count = vertex_count,
+      .edges = edges,
+      .vertices = vertices,
+  };
+  return graph;
+}
 
 void initialise_single_source(Graph *graph, Index start_vertex) {
   for (int i = 0; i < graph->vertex_count; ++i) {
