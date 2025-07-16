@@ -3,22 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*
-  TODO - decide if we want to pass weights in as part of the same string as edges, or as a separate string / list
-  - same string as edges feels like the easiest thing to read and understand
-  - separate argument makes it easier to set a graph up with one set of vertices and edges and test repeatedly with different weights
-  - passing a separate argument which is just an array of numbers avoids any string parsing
-  - weights probably need to be a float, not an int
-*/
-
 int main(void) {
-  Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5");
+  double weights[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, -0.8};
+  Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5", weights);
   graph_print(g);
 }
 
 void graph_print(Graph g) {
   printf("Graph:\n");
-  printf("   Vertex Count: %d\n   Edge Count: %d\n", g.vertex_count, g.edge_count);
+  printf("   Vertex Count: %d\n   Edge Count: %d\n", g.vertex_count,
+         g.edge_count);
 
   printf("   Vertices:\n");
   for (int i = 0; i < g.vertex_count; ++i) {
@@ -30,7 +24,7 @@ void graph_print(Graph g) {
   printf("   Edges:\n");
   for (int i = 0; i < g.edge_count; ++i) {
     Edge edge = g.edges[i];
-    printf("   %4d. start = %d, end = %d, weight = %ld\n", i + 1, edge.start,
+    printf("   %4d. start = %d, end = %d, weight = %f\n", i + 1, edge.start,
            edge.end, edge.weight);
   }
 }
@@ -40,7 +34,8 @@ typedef enum {
   END,
 } GraphCreateParsingMode;
 
-Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
+Graph graph_create(int vertex_count, int edge_count, char *edge_string,
+                   double *weights) {
   Vertex *vertices = malloc(sizeof(Vertex) * vertex_count);
   Edge *edges = malloc(sizeof(Edge) * edge_count);
 
@@ -133,6 +128,11 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
 
   free(start_chars_buf);
   free(end_chars_buf);
+
+  for (int i = 0; i < edge_count; i++) {
+    edges[i].weight = weights[i];
+  }
+
   Graph graph = {
       .edge_count = edge_count,
       .vertex_count = vertex_count,
