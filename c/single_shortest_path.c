@@ -9,22 +9,28 @@ int main(void) {
 }
 
 void graph_print(Graph g) {
-  printf("Vertex Count: %d\nEdge Count: %d\n", g.vertex_count, g.edge_count);
+  printf("Graph:\n");
+  printf("   Vertex Count: %d\n   Edge Count: %d\n", g.vertex_count, g.edge_count);
 
-  printf("Vertices:\n");
+  printf("   Vertices:\n");
   for (int i = 0; i < g.vertex_count; ++i) {
     Vertex vertex = g.vertices[i];
-    printf("%5d. distance = %ld, parent = %d\n", i + 1, vertex.distance,
+    printf("   %4d. distance = %ld, parent = %d\n", i + 1, vertex.distance,
            vertex.parent);
   }
 
-  printf("Edges:\n");
+  printf("   Edges:\n");
   for (int i = 0; i < g.edge_count; ++i) {
     Edge edge = g.edges[i];
-    printf("%5d. start = %d, end = %d, weight = %ld\n", i + 1, edge.start,
+    printf("   %4d. start = %d, end = %d, weight = %ld\n", i + 1, edge.start,
            edge.end, edge.weight);
   }
 }
+
+typedef enum {
+  START,
+  END,
+} GraphCreateParsingMode;
 
 Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
   Vertex *vertices = malloc(sizeof(Vertex) * vertex_count);
@@ -44,7 +50,7 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
 
   int chars_read = 0;
   int edges_read = 0;
-  bool reading_start_chars = true;
+  GraphCreateParsingMode mode = START;
   while (edges_read < edge_count) {
     char value = edge_string[chars_read];
     switch (value) {
@@ -59,7 +65,7 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
         Index end = parse_index_from_string(end_chars_buf, end_chars_count);
         edges[edges_read].start = start;
         edges[edges_read].end = end;
-        edges[edges_read].weight = 1; // TODO - make this easy to set too
+        edges[edges_read].weight = INT64_MIN;
         edges_read++;
       }
       break;
@@ -73,7 +79,7 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
     case '7':
     case '8':
     case '9':
-      if (reading_start_chars) {
+      if (mode == START) {
         start_chars_buf[start_chars_count] = value;
         start_chars_count++;
       } else {
@@ -83,18 +89,15 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
       break;
     case ',':
     case ' ':
-      if (!reading_start_chars) {
-        reading_start_chars = true;
+      if (mode == END) {
+        mode = START;
 
         Index start =
             parse_index_from_string(start_chars_buf, start_chars_count);
         Index end = parse_index_from_string(end_chars_buf, end_chars_count);
-        printf(
-            "start: %d, end: %d, end_chars_count: %d, end_chars_buf[0]: %c\n",
-            start, end, end_chars_count, end_chars_buf[0]);
         edges[edges_read].start = start;
         edges[edges_read].end = end;
-        edges[edges_read].weight = 1; // TODO - make this easy to set too
+        edges[edges_read].weight = INT64_MIN;
         edges_read++;
 
         start_chars_count = 0;
@@ -106,8 +109,8 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
       }
       break;
     case '-':
-      if (reading_start_chars) {
-        reading_start_chars = false;
+      if (mode == START) {
+        mode = END;
       } else {
         fprintf(stderr, "ERROR: unexpected '-' character in edge string");
         exit(1);
@@ -159,7 +162,6 @@ void graph_relax_edge(Graph *graph, Index edge_index) {
 }
 
 // TODO - test
-// TODO - write a graph builder function
 bool graph_bellman_ford(Graph *graph, Index start_vertex) {
   initialise_single_source(graph, start_vertex);
   for (int i = 0; i < graph->vertex_count - 1; ++i) {
