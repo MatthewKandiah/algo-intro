@@ -14,14 +14,14 @@ void graph_print(Graph g) {
   printf("Vertices:\n");
   for (int i = 0; i < g.vertex_count; ++i) {
     Vertex vertex = g.vertices[i];
-    printf("\t%d. distance = %ld, parent = %d\n", i, vertex.distance,
+    printf("%5d. distance = %ld, parent = %d\n", i + 1, vertex.distance,
            vertex.parent);
   }
 
   printf("Edges:\n");
   for (int i = 0; i < g.edge_count; ++i) {
     Edge edge = g.edges[i];
-    printf("\t%d. start = %d, end = %d, weight = %ld\n", i, edge.start,
+    printf("%5d. start = %d, end = %d, weight = %ld\n", i + 1, edge.start,
            edge.end, edge.weight);
   }
 }
@@ -87,8 +87,8 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
         reading_start_chars = true;
 
         Index start =
-            strtol(start_chars_buf, &start_chars_buf + start_chars_count, 10);
-        Index end = strtol(end_chars_buf, &end_chars_buf + end_chars_count, 10);
+            parse_index_from_string(start_chars_buf, start_chars_count);
+        Index end = parse_index_from_string(end_chars_buf, end_chars_count);
         printf(
             "start: %d, end: %d, end_chars_count: %d, end_chars_buf[0]: %c\n",
             start, end, end_chars_count, end_chars_buf[0]);
@@ -120,9 +120,8 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string) {
     chars_read += 1;
   }
 
-  // TODO - segfault? aren't these needed?
-  // free(start_chars_buf);
-  // free(end_chars_buf);
+  free(start_chars_buf);
+  free(end_chars_buf);
   Graph graph = {
       .edge_count = edge_count,
       .vertex_count = vertex_count,
