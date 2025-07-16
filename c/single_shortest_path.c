@@ -7,6 +7,7 @@ int main(void) {
   double weights[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, -0.8};
   Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5", weights);
   graph_print(g);
+  graph_destroy(g);
 }
 
 void graph_print(Graph g) {
@@ -140,6 +141,11 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string,
       .vertices = vertices,
   };
   return graph;
+}
+
+void graph_destroy(Graph g) {
+  free(g.edges);
+  free(g.vertices);
 }
 
 Index parse_index_from_string(char *buf, int len) {
