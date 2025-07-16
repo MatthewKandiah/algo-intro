@@ -6,7 +6,7 @@
 int main(void) {
   double weights[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, -0.8};
   Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5", weights);
-  graph_print(g);
+  graph_bellman_ford(&g, 4);
   graph_destroy(g);
 }
 
@@ -18,14 +18,14 @@ void graph_print(Graph g) {
   printf("   Vertices:\n");
   for (int i = 0; i < g.vertex_count; ++i) {
     Vertex vertex = g.vertices[i];
-    printf("   %4d. distance = %ld, parent = %d\n", i + 1, vertex.distance,
+    printf("   %4d. distance = %ld, parent = %d\n", i, vertex.distance,
            vertex.parent);
   }
 
   printf("   Edges:\n");
   for (int i = 0; i < g.edge_count; ++i) {
     Edge edge = g.edges[i];
-    printf("   %4d. start = %d, end = %d, weight = %f\n", i + 1, edge.start,
+    printf("   %4d. start = %d, end = %d, weight = %f\n", i, edge.start,
            edge.end, edge.weight);
   }
 }
@@ -159,30 +159,33 @@ Index parse_index_from_string(char *buf, int len) {
 
 void initialise_single_source(Graph *graph, Index start_vertex) {
   for (int i = 0; i < graph->vertex_count; ++i) {
-    graph->vertices[i].distance = 0;
+    graph->vertices[i].distance = INT64_MAX; // effectively infinity
     graph->vertices[i].parent = -1;
   }
-  graph->vertices[start_vertex].distance = INT64_MAX; // effectively infinity
+  graph->vertices[start_vertex].distance = 0;
 }
 
 void graph_relax_edge(Graph *graph, Index edge_index) {
   Edge edge = graph->edges[edge_index];
   int64_t possible_distance =
-      graph->vertices[edge.start].distance + edge.weight;
+      graph->vertices[edge.start].distance + edge.weight; // bug - we're getting int overflow because I'm using INT64_MAX for infinity
   if (graph->vertices[edge.end].distance > possible_distance) {
     graph->vertices[edge.end].distance = possible_distance;
     graph->vertices[edge.end].parent = edge.start;
   }
 }
 
-// TODO - test
 bool graph_bellman_ford(Graph *graph, Index start_vertex) {
   initialise_single_source(graph, start_vertex);
+  printf("start\n");
+  graph_print(*graph);
   for (int i = 0; i < graph->vertex_count - 1; ++i) {
     for (int edge_idx = 0; edge_idx < graph->edge_count; ++edge_idx) {
       graph_relax_edge(graph, edge_idx);
     }
   }
+  printf("after relaxing\n");
+  graph_print(*graph);
   for (int edge_idx = 0; edge_idx < graph->edge_count; ++edge_idx) {
     Edge edge = graph->edges[edge_idx];
     if (graph->vertices[edge.end].distance >
