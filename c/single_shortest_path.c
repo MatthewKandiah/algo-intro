@@ -3,6 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+  TODO - decide if we want to pass weights in as part of the same string as edges, or as a separate string / list
+  - same string as edges feels like the easiest thing to read and understand
+  - separate argument makes it easier to set a graph up with one set of vertices and edges and test repeatedly with different weights
+  - passing a separate argument which is just an array of numbers avoids any string parsing
+  - weights probably need to be a float, not an int
+*/
+
 int main(void) {
   Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5");
   graph_print(g);
