@@ -8,13 +8,13 @@ just need to find a valid one. If no such path exists, we return a sensible
 value.
 */
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef int Index; // sentinel value -1 for nil
 
 typedef struct Vertex {
-  int64_t distance;
+  double distance;
   Index parent;
 } Vertex;
 
@@ -31,11 +31,15 @@ typedef struct Graph {
   Edge *edges;
 } Graph;
 
-Graph graph_create(int vertex_count, int edge_count, char *edge_string, double *weights);
+Graph graph_create(int vertex_count, int edge_count, char *edge_string,
+                   double *weights);
 void graph_destroy(Graph);
 void graph_print(Graph);
 Index parse_index_from_string(char *, int);
 void graph_initialise_single_source(Graph *graph, Index start_vertex);
 void graph_relax_edge(Graph *graph, Index edge_index);
-bool graph_bellman_ford(Graph *graph, Index start_vertex); // return false if negative weight cycle found i.e. no finite length shortest path exists
+bool graph_bellman_ford(
+    Graph *graph,
+    Index start_vertex); // return false if negative weight cycle found i.e. no
+                         // finite length shortest path exists
 

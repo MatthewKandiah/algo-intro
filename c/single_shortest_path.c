@@ -1,12 +1,25 @@
 #include "./single_shortest_path.h"
+#include <float.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 int main(void) {
-  double weights[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, -0.8};
-  Graph g = graph_create(10, 8, "1-1 1-2 2-1 3-4 5-4 4-5 5-1 3-5", weights);
-  graph_bellman_ford(&g, 4);
+  double weights[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8};
+  Graph g = graph_create(5, 8, "0-1 1-2 2-3 3-4 4-3 3-2 2-1 1-0", weights);
+  if (!graph_bellman_ford(&g, 4)) {
+    fprintf(stderr, "invalid output graph\n");
+    exit(1);
+  }
+  graph_print(g);
+  graph_destroy(g);
+
+  g = graph_create(5, 8, "1-0 2-1 3-2 4-3 3-4 2-3 1-2 0-1", weights);
+  if (!graph_bellman_ford(&g, 4)) {
+    fprintf(stderr, "invalid output graph 2\n");
+    exit(1);
+  }
+  graph_print(g);
   graph_destroy(g);
 }
 
@@ -18,7 +31,7 @@ void graph_print(Graph g) {
   printf("   Vertices:\n");
   for (int i = 0; i < g.vertex_count; ++i) {
     Vertex vertex = g.vertices[i];
-    printf("   %4d. distance = %ld, parent = %d\n", i, vertex.distance,
+    printf("   %4d. distance = %f, parent = %d\n", i, vertex.distance,
            vertex.parent);
   }
 
@@ -69,7 +82,7 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string,
         Index end = parse_index_from_string(end_chars_buf, end_chars_count);
         edges[edges_read].start = start;
         edges[edges_read].end = end;
-        edges[edges_read].weight = INT64_MIN;
+        edges[edges_read].weight = DBL_MIN;
         edges_read++;
       }
       break;
@@ -101,7 +114,7 @@ Graph graph_create(int vertex_count, int edge_count, char *edge_string,
         Index end = parse_index_from_string(end_chars_buf, end_chars_count);
         edges[edges_read].start = start;
         edges[edges_read].end = end;
-        edges[edges_read].weight = INT64_MIN;
+        edges[edges_read].weight = DBL_MIN;
         edges_read++;
 
         start_chars_count = 0;
@@ -157,9 +170,9 @@ Index parse_index_from_string(char *buf, int len) {
   return res;
 }
 
-void initialise_single_source(Graph *graph, Index start_vertex) {
+void graph_initialise_single_source(Graph *graph, Index start_vertex) {
   for (int i = 0; i < graph->vertex_count; ++i) {
-    graph->vertices[i].distance = INT64_MAX; // effectively infinity
+    graph->vertices[i].distance = DBL_MAX; // effectively infinity
     graph->vertices[i].parent = -1;
   }
   graph->vertices[start_vertex].distance = 0;
@@ -167,8 +180,7 @@ void initialise_single_source(Graph *graph, Index start_vertex) {
 
 void graph_relax_edge(Graph *graph, Index edge_index) {
   Edge edge = graph->edges[edge_index];
-  int64_t possible_distance =
-      graph->vertices[edge.start].distance + edge.weight; // bug - we're getting int overflow because I'm using INT64_MAX for infinity
+  double possible_distance = graph->vertices[edge.start].distance + edge.weight;
   if (graph->vertices[edge.end].distance > possible_distance) {
     graph->vertices[edge.end].distance = possible_distance;
     graph->vertices[edge.end].parent = edge.start;
@@ -176,18 +188,14 @@ void graph_relax_edge(Graph *graph, Index edge_index) {
 }
 
 bool graph_bellman_ford(Graph *graph, Index start_vertex) {
-  initialise_single_source(graph, start_vertex);
-  printf("start\n");
-  graph_print(*graph);
+  graph_initialise_single_source(graph, start_vertex);
   for (int i = 0; i < graph->vertex_count - 1; ++i) {
-    for (int edge_idx = 0; edge_idx < graph->edge_count; ++edge_idx) {
-      graph_relax_edge(graph, edge_idx);
+    for (int j = 0; j < graph->edge_count; ++j) {
+      graph_relax_edge(graph, j);
     }
   }
-  printf("after relaxing\n");
-  graph_print(*graph);
-  for (int edge_idx = 0; edge_idx < graph->edge_count; ++edge_idx) {
-    Edge edge = graph->edges[edge_idx];
+  for (int i = 0; i < graph->edge_count; ++i) {
+    Edge edge = graph->edges[i];
     if (graph->vertices[edge.end].distance >
         graph->vertices[edge.start].distance + edge.weight) {
       return false;
