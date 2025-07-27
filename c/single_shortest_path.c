@@ -4,25 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(void) {
-  double weights[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8};
-  Graph g = graph_create(5, 8, "0-1 1-2 2-3 3-4 4-3 3-2 2-1 1-0", weights);
-  if (!graph_bellman_ford(&g, 4)) {
-    fprintf(stderr, "invalid output graph\n");
-    exit(1);
-  }
-  graph_print(g);
-  graph_destroy(g);
-
-  g = graph_create(5, 8, "1-0 2-1 3-2 4-3 3-4 2-3 1-2 0-1", weights);
-  if (!graph_bellman_ford(&g, 4)) {
-    fprintf(stderr, "invalid output graph 2\n");
-    exit(1);
-  }
-  graph_print(g);
-  graph_destroy(g);
-}
-
 void graph_print(Graph g) {
   printf("Graph:\n");
   printf("   Vertex Count: %d\n   Edge Count: %d\n", g.vertex_count,
