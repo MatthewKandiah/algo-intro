@@ -2,9 +2,11 @@ format ELF64 executable 3
 
 entry start
 
+STDOUT = 1
+NEWLINE = 0xa
 macro print ptr,len {
   mov rax, 1
-  mov rdi, 1
+  mov rdi, STDOUT
   mov rsi, ptr
   mov rdx, len
   syscall
@@ -62,5 +64,5 @@ start:
   exit 0
 
 segment readable writable
-hello db "Hello, World", 0xa
+hello db "Hello, World", NEWLINE
 hello_len = $-hello
