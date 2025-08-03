@@ -20,7 +20,7 @@ PROT_READ = 0x1
 PROT_WRITE = 0x2
 MAP_PRIVATE = 0x2
 MAP_ANONYMOUS = 0x20
-macro allocate len {
+macro mmap len {
   mov rax, 9
   mov rdi, 0
   mov rsi, len
@@ -31,13 +31,21 @@ macro allocate len {
   syscall
 }
 
+macro munmap ptr,len {
+	mov rax, 11
+	mov rdi, ptr
+	mov rsi, len
+	syscall
+}
+
 segment readable executable
 start:
   print hello, hello_len
-  allocate hello_len
+  mmap hello_len
   mov r15, rax
   mov byte [r15], 97 ;; a
   print r15, 1
+  munmap r15, hello_len
   exit 0
 
 segment readable writable
