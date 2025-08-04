@@ -29,6 +29,8 @@ start:
 
   heap_build 24
   heap_set_data rax,8,0xffffffffffffffff
+  mov r14, rax
+  heap_free r14
   exit 0
 
 segment readable writable

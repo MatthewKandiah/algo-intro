@@ -35,3 +35,9 @@ macro heap_build cap {
 	heap_set_size rax, 0
 	heap_set_capacity rax, cap
 }
+
+macro heap_free ptr {
+	heap_capacity ptr
+	mov r15, rax
+	munmap ptr, r15
+}
