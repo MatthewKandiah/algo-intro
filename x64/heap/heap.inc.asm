@@ -4,41 +4,14 @@
 ;; 8: capacity (qword) = max number of elements that can be stored in heap
 ;; 16: data = ptr to first element, elements assumed to be qword sized
 
-;; all field access macros move desired value into rax
-
-macro heap_size ptr {
-	mov rax, qword [ptr]
-}
-
-macro heap_capacity ptr {
-	mov rax, qword [ptr + 8]
-}
-
-macro heap_data ptr {
-	mov rax, qword [ptr + 16]
-}
-
-macro heap_set_size ptr,value {
-	mov qword [ptr], value
-}
-
-macro heap_set_capacity ptr,value {
-	mov qword [ptr + 8], value
-}
-
-macro heap_set_data ptr,index,value {
-	mov qword [ptr+16+index*8], value
-}
-
 macro heap_build cap {
 	mmap cap+16
-	heap_set_size rax, 0
-	heap_set_capacity rax, cap
+	mov qword [rax], 0
+	mov qword [rax + 8], cap
 }
 
 macro heap_free ptr {
-	heap_capacity ptr
-	mov r15, rax
+	mov r15, qword [ptr + 8]
 	munmap ptr, r15
 }
 
@@ -46,19 +19,78 @@ macro heap_free ptr {
 ;; they pop that value, then push the result on to the stack
 macro heap_index_parent {
 	pop r15
+	inc r15
 	shr r15, 1
+	dec r15
 	push r15
 }
 
 macro heap_index_left {
 	pop r15
+	inc r15
 	shl r15, 1
+	dec r15
 	push r15
 }
 
 macro heap_index_right {
 	pop r15
-	shl r15, 1
 	inc r15
+ 	shl r15, 1
 	push r15
 }
+
+;; expects heap and index to be on the stack
+;; returns in rax: 0 for false, 1 for true
+max_heap_node_check:
+  pop r15 ;; return address
+  pop qword r8 ;; index to check
+  pop qword rbp ;; heap ptr
+  push r15 ;; restore return address
+  mov r15, rbp
+  add r15, 16
+  mov r14, r8
+  shl r14, 3
+  add r15, r14 ;; [rbp + 16 + 8 * r8]
+  .check_left:
+    push r15
+    push r8
+    heap_index_left
+    pop r9 ;; left index
+    pop r15
+    cmp r9, qword [rbp] ;; compare left index with number of elements
+    jae .return_true
+    ;; compare the value at [rbp + 16 + 8 * r8] and at [rbp + 16 + 8 * r9]
+    mov r14, rbp
+    add r14, 16
+    mov r13, r9
+    shl r13, 3
+    add r14, r13 ;; [rbp + 16 + 8 * r9]
+    mov r14, qword [r14]
+    cmp qword [r15], r14
+    jb .return_false
+  .check_right:
+    push r15
+    push r8
+    heap_index_right
+    pop r9 ;; right index
+    pop r15
+    cmp r9, qword [rbp] ;; compare right index with number of elements
+    jae .return_true
+    ;; compare the value at [rbp + 16 + 8 * r8] and at [rbp + 16 + 8 * r9]
+    mov r14, rbp
+    add r14, 16
+    mov r13, r9
+    shl r13, 3
+    add r14, r13 ;; [rbp + 16 + 8 * r9]
+    mov r14, qword [r14]
+    cmp qword [r15], r14
+    jb .return_false
+  .return_true:
+    mov rax, 1
+    ret
+  .return_false:
+    int3
+    mov rax, 0
+    ret
+

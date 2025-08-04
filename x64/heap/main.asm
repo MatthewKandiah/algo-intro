@@ -7,39 +7,20 @@ include "./heap.inc.asm"
 
 segment readable executable
 start:
-  print hello, hello_len
-
-  ;; allocate a new block of memory, copy data into it, and print it
-  mmap hello_len
-  mov r15, rax ;; pointer to copied data
-  mov r14, 0 ;; counter
-  mov r13, r15 ;; copy dest address
-  mov r12, hello ;; copy source address
-  .loop_start:
-    mov r11b, byte[r12]
-    mov byte [r13], r11b
-    inc r14
-    add r13, 1
-    add r12, 1
-    cmp r14, hello_len
-    jl .loop_start
-
-  print r15, hello_len
-  munmap r15, hello_len
-
   heap_build 24
-  heap_set_data rax,8,0xffffffffffffffff
   mov r14, rax
-  heap_free r14
+  mov qword [r14 + 16 + 0], 0x16
+  mov qword [r14 + 16 + 8], 0x14
+  mov qword [r14 + 16 + 16], 0x10
+  mov qword [r14], 3
 
-  push 11
-  heap_index_parent
-  push 5
-  heap_index_left
-  push 5
-  heap_index_right
+	push r14
+	push r14
+	push 0
+  call max_heap_node_check
+  pop r14
+
+  heap_free r14
   exit 0
 
 segment readable writable
-hello db "Hello, World", NEWLINE
-hello_len = $-hello
