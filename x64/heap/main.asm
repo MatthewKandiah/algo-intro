@@ -3,6 +3,7 @@ format ELF64 executable 3
 entry start
 
 include "./syscalls.inc.asm"
+include "./heap.inc.asm"
 
 segment readable executable
 start:
@@ -25,6 +26,9 @@ start:
 
   print r15, hello_len
   munmap r15, hello_len
+
+  heap_build 24
+  heap_set_data rax,8,0xffffffffffffffff
   exit 0
 
 segment readable writable
