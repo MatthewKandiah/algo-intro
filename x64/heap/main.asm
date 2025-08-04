@@ -31,6 +31,13 @@ start:
   heap_set_data rax,8,0xffffffffffffffff
   mov r14, rax
   heap_free r14
+
+  push 11
+  heap_index_parent
+  push 5
+  heap_index_left
+  push 5
+  heap_index_right
   exit 0
 
 segment readable writable

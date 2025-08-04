@@ -41,3 +41,24 @@ macro heap_free ptr {
 	mov r15, rax
 	munmap ptr, r15
 }
+
+;; heap_index macros expect the index to be on the stack
+;; they pop that value, then push the result on to the stack
+macro heap_index_parent {
+	pop r15
+	shr r15, 1
+	push r15
+}
+
+macro heap_index_left {
+	pop r15
+	shl r15, 1
+	push r15
+}
+
+macro heap_index_right {
+	pop r15
+	shl r15, 1
+	inc r15
+	push r15
+}
