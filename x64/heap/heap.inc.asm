@@ -43,11 +43,15 @@ macro heap_index_right {
 
 ;; expects heap and index to be on the stack
 ;; returns in rax: 0 for false, 1 for true
+;; internals
+;; parent index: r8
+;; heap ptr: rbp
+;; parent element data address: r15
+;; child index to compare to: r9
+;; child element data: r14
 max_heap_node_check:
-  pop r15 ;; return address
-  pop qword r8 ;; index to check
-  pop qword rbp ;; heap ptr
-  push r15 ;; restore return address
+  mov r8, qword [rsp + 8]
+  mov rbp, qword [rsp + 16]
   mov r15, rbp
   add r15, 16
   mov r14, r8
@@ -66,7 +70,7 @@ max_heap_node_check:
     add r14, 16
     mov r13, r9
     shl r13, 3
-    add r14, r13 ;; [rbp + 16 + 8 * r9]
+    add r14, r13 ;; rbp + 16 + 8 * r9
     mov r14, qword [r14]
     cmp qword [r15], r14
     jb .return_false
@@ -83,7 +87,7 @@ max_heap_node_check:
     add r14, 16
     mov r13, r9
     shl r13, 3
-    add r14, r13 ;; [rbp + 16 + 8 * r9]
+    add r14, r13 ;; rbp + 16 + 8 * r9
     mov r14, qword [r14]
     cmp qword [r15], r14
     jb .return_false

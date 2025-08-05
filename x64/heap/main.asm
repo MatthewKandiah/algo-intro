@@ -15,9 +15,9 @@ start:
   mov qword [r14], 3
 
 	push r14
-	push r14
 	push 0
   call max_heap_node_check
+  sub rsp, 8
   pop r14
 
   heap_free r14
