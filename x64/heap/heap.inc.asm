@@ -5,41 +5,67 @@
 ;; 16: data = ptr to first element, elements assumed to be qword sized
 
 macro heap_build cap {
-	mmap cap+16
-	mov qword [rax], 0
-	mov qword [rax + 8], cap
+  mmap cap+16
+  mov qword [rax], 0
+  mov qword [rax + 8], cap
 }
 
 macro heap_free ptr {
-	mov r15, qword [ptr + 8]
-	add r15, 16
-	munmap ptr, r15
+  mov r15, qword [ptr + 8]
+  add r15, 16
+  munmap ptr, r15
 }
 
 ;; heap_index macros expect the index to be on the stack
 ;; they pop that value, then push the result on to the stack
 macro heap_index_parent {
-	pop r15
-	inc r15
-	shr r15, 1
-	dec r15
-	push r15
+  pop r15
+  inc r15
+  shr r15, 1
+  dec r15
+  push r15
 }
 
 macro heap_index_left {
-	pop r15
-	inc r15
-	shl r15, 1
-	dec r15
-	push r15
+  pop r15
+  inc r15
+  shl r15, 1
+  dec r15
+  push r15
 }
 
 macro heap_index_right {
-	pop r15
-	inc r15
- 	shl r15, 1
-	push r15
+  pop r15
+  inc r15
+  shl r15, 1
+  push r15
 }
+
+;; expects heap to be on the stack
+;; returns in rax: 0 for false, 1 for true
+is_max_heap:
+  mov rbp, qword [rsp + 8] ;; pointer to heap
+  mov r10, [rbp] ;; number of elements in heap
+  mov rdx, 0 ;; counter
+  push rbp
+  .loop_start:
+    push rdx ;; index to check
+    call max_heap_node_check
+    add rsp, 8 ;; remove checked index from stack
+    cmp rax, 0
+    je .return_false
+  .check_condition:
+    inc rdx
+    cmp rdx, r10
+    jb .loop_start
+  .return_true:
+    add rsp, 8 ;; remove heap from stack
+    mov rax, 1
+    ret
+  .return_false:
+    add rsp, 8 ;; remove heap from stack
+    mov rax, 0
+    ret
 
 ;; expects heap and index to be on the stack
 ;; returns in rax: 0 for false, 1 for true
@@ -95,7 +121,6 @@ max_heap_node_check:
     mov rax, 1
     ret
   .return_false:
-    int3
     mov rax, 0
     ret
 

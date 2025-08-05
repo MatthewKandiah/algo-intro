@@ -11,13 +11,11 @@ start:
   mov r14, rax
   mov qword [r14 + 16 + 0], 0x16
   mov qword [r14 + 16 + 8], 0x14
-  mov qword [r14 + 16 + 16], 0x10
+  mov qword [r14 + 16 + 16], 0x15
   mov qword [r14], 3
 
-	push r14
-	push 0
-  call max_heap_node_check
-  sub rsp, 8
+  push r14
+  call is_max_heap
   pop r14
 
   heap_free r14
