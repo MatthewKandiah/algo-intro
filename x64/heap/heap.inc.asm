@@ -12,6 +12,7 @@ macro heap_build cap {
 
 macro heap_free ptr {
 	mov r15, qword [ptr + 8]
+	add r15, 16
 	munmap ptr, r15
 }
 
