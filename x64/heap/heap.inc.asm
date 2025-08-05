@@ -124,3 +124,86 @@ max_heap_node_check:
     mov rax, 0
     ret
 
+;; expects heap to be on the stack
+;; returns in rax: 0 for false, 1 for true
+is_min_heap:
+  mov rbp, qword [rsp + 8] ;; pointer to heap
+  mov r10, [rbp] ;; number of elements in heap
+  mov rdx, 0 ;; counter
+  push rbp
+  .loop_start:
+    push rdx ;; index to check
+    call min_heap_node_check
+    add rsp, 8 ;; remove checked index from stack
+    cmp rax, 0
+    je .return_false
+  .check_condition:
+    inc rdx
+    cmp rdx, r10
+    jb .loop_start
+  .return_true:
+    add rsp, 8 ;; remove heap from stack
+    mov rax, 1
+    ret
+  .return_false:
+    add rsp, 8 ;; remove heap from stack
+    mov rax, 0
+    ret
+
+;; expects heap and index to be on the stack
+;; returns in rax: 0 for false, 1 for true
+;; internals
+;; parent index: r8
+;; heap ptr: rbp
+;; parent element data address: r15
+;; child index to compare to: r9
+;; child element data: r14
+min_heap_node_check:
+  mov r8, qword [rsp + 8]
+  mov rbp, qword [rsp + 16]
+  mov r15, rbp
+  add r15, 16
+  mov r14, r8
+  shl r14, 3
+  add r15, r14 ;; [rbp + 16 + 8 * r8]
+  .check_left:
+    push r15
+    push r8
+    heap_index_left
+    pop r9 ;; left index
+    pop r15
+    cmp r9, qword [rbp] ;; compare left index with number of elements
+    jae .return_true
+    ;; compare the value at [rbp + 16 + 8 * r8] and at [rbp + 16 + 8 * r9]
+    mov r14, rbp
+    add r14, 16
+    mov r13, r9
+    shl r13, 3
+    add r14, r13 ;; rbp + 16 + 8 * r9
+    mov r14, qword [r14]
+    cmp qword [r15], r14
+    ja .return_false
+  .check_right:
+    push r15
+    push r8
+    heap_index_right
+    pop r9 ;; right index
+    pop r15
+    cmp r9, qword [rbp] ;; compare right index with number of elements
+    jae .return_true
+    ;; compare the value at [rbp + 16 + 8 * r8] and at [rbp + 16 + 8 * r9]
+    mov r14, rbp
+    add r14, 16
+    mov r13, r9
+    shl r13, 3
+    add r14, r13 ;; rbp + 16 + 8 * r9
+    mov r14, qword [r14]
+    cmp qword [r15], r14
+    ja .return_false
+  .return_true:
+    mov rax, 1
+    ret
+  .return_false:
+    mov rax, 0
+    ret
+
