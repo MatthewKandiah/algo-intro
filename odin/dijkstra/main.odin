@@ -116,11 +116,12 @@ min_priority_queue_decrease_key :: proc(heap: Heap, handle: int, new_key: f64) {
 		panic("new key must be less than old key")
 	}
 
+  heap.data[target_record_idx].key = new_key
 	for target_record_idx > 0 &&
 	    heap.data[heap_parent(target_record_idx)].key > heap.data[target_record_idx].key {
-		old_parent_value := heap.data[heap_parent(target_record_idx)].key
-		heap.data[heap_parent(target_record_idx)].key = heap.data[target_record_idx].key
-		heap.data[target_record_idx].key = old_parent_value
+		old_parent_value := heap.data[heap_parent(target_record_idx)]
+		heap.data[heap_parent(target_record_idx)] = heap.data[target_record_idx]
+		heap.data[target_record_idx] = old_parent_value
 		target_record_idx = heap_parent(target_record_idx)
 	}
 }
