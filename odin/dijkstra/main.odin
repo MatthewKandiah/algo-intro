@@ -116,7 +116,7 @@ min_priority_queue_decrease_key :: proc(heap: Heap, handle: int, new_key: f64) {
 		panic("new key must be less than old key")
 	}
 
-  heap.data[target_record_idx].key = new_key
+	heap.data[target_record_idx].key = new_key
 	for target_record_idx > 0 &&
 	    heap.data[heap_parent(target_record_idx)].key > heap.data[target_record_idx].key {
 		old_parent_value := heap.data[heap_parent(target_record_idx)]
@@ -127,8 +127,9 @@ min_priority_queue_decrease_key :: proc(heap: Heap, handle: int, new_key: f64) {
 }
 
 Vertex :: struct {
-	distance: f64,
-	parent:   int,
+	distance:         f64,
+	parent:           int,
+	already_searched: bool,
 }
 
 Edge :: struct {
@@ -146,6 +147,7 @@ graph_initialise_single_source :: proc(graph: Graph, src_idx: int) {
 	for &vertex in graph.vertices {
 		vertex.distance = max(f64)
 		vertex.parent = -1
+		vertex.already_searched = false
 	}
 	graph.vertices[src_idx].distance = 0
 }
@@ -179,11 +181,13 @@ graph_dijkstra :: proc(graph: Graph, src_idx: int) {
 		current_idx := current_heap_record.handle
 		for edge, edge_idx in graph.edges {
 			if edge.start != current_idx {continue}
+			if graph.vertices[edge.end].already_searched {continue}
 			relax_decreased_d := graph_relax_edge(graph, edge_idx)
 			if relax_decreased_d {
 				min_priority_queue_decrease_key(queue, edge.end, graph.vertices[edge.end].distance)
 			}
 		}
+		graph.vertices[current_idx].already_searched = true
 	}
 }
 
@@ -192,8 +196,8 @@ dijkstra_example :: proc(t: ^testing.T) {
 	vertices := make([]Vertex, 5)
 	edges := make([]Edge, 10)
 	defer {
-  	delete(vertices)
-  	delete(edges)
+		delete(vertices)
+		delete(edges)
 	}
 	edges[0] = Edge {
 		start  = 0,
